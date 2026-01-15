@@ -1,8 +1,8 @@
 -- ================================================================================ --
 --				EMA - ( Ebony's MultiBoxing Assistant )    							--
---				Current Author: Jennifer Calladine (Ebony)								--
+--				Current Author: Jennifer Cally (Ebony)								--
 --																					--
---				License: All Rights Reserved 2018-2025 Jennifer Cally					--
+--				License: All Rights Reserved 2018-2020 Jennifer Cally					--
 --																					--
 --				Some Code Used from "Jamba" that is 								--
 --				Released under the MIT License 										--
@@ -979,19 +979,11 @@ function EMA:UpdateHideBlizzardWatchFrame()
 		end
 	else
 		if EMA.db.hideBlizzardWatchFrame == true then
-			if _G.WOW_PROJECT_ID == _G.WOW_PROJECT_CATACLYSM_CLASSIC then 
-				if WatchFrame:IsVisible() then
-					--QuestLogFrame:Hide()
-					WatchFrame:HookScript("OnShow", function(self) self:Hide() end)
-					WatchFrame:Hide()
-				end
-			else	
-				if QuestWatchFrame:IsVisible() then
-					--QuestLogFrame:Hide()
-					QuestWatchFrame:HookScript("OnShow", function(self) self:Hide() end)
-					QuestWatchFrame:Hide()
-				end
-			end	
+			if QuestWatchFrame:IsVisible() then
+				--QuestLogFrame:Hide()
+				QuestWatchFrame:HookScript("OnShow", function(self) self:Hide() end)
+				QuestWatchFrame:Hide()
+			end
 		else
 			QuestWatchFrame:Show()
 		end

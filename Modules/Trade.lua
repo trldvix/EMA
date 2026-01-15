@@ -1,8 +1,8 @@
 -- ================================================================================ --
 --				EMA - ( Ebony's MultiBoxing Assistant )    							--
---				Current Author: Jennifer Calladine (Ebony)								--
+--				Current Author: Jennifer Cally (Ebony)								--
 --																					--
---				License: All Rights Reserved 2018-2025 Jennifer Cally					--
+--				License: All Rights Reserved 2018-2022 Jennifer Calladine					--
 --																					--
 --				Some Code Used from "Jamba" that is 								--
 --				Released under the MIT License 										--
@@ -25,6 +25,11 @@ local EMAUtilities = LibStub:GetLibrary( "EbonyUtilities-1.0" )
 local EMAHelperSettings = LibStub:GetLibrary( "EMAHelperSettings-1.0" )
 local LibBagUtils = LibStub:GetLibrary( "LibBagUtils-1.0" )
 local AceGUI = LibStub( "AceGUI-3.0" )
+
+-- Get API wrappers from Core.
+local GetContainerNumSlots = EMAPrivate.Core.GetContainerNumSlots
+local GetContainerItemInfo = EMAPrivate.Core.GetContainerItemInfo
+local GetContainerItemLink = EMAPrivate.Core.GetContainerItemLink
 
 --  Constants and Locale for this module.
 EMA.moduleName = "Trade"
@@ -708,7 +713,6 @@ function EMA:SettingsRefresh()
 	EMA.settingsControl.tradeItemsButtonAdd:SetDisabled( not EMA.db.showEMATradeWindow )	
 	EMA.settingsControl.listCheckBoxBoxOtherBlackListItem:SetDisabled( not EMA.db.showEMATradeWindow )
 	EMA.settingsControl.checkBoxTradeBoEItems:SetDisabled( not EMA.db.showEMATradeWindow )
-	EMA.settingsControl.tradeTradeGrayItemsTag:SetDisabled( not EMA.db.showEMATradeWindow )
 	EMA.settingsControl.tradeTradeBoEItemsTag:SetDisabled( not EMA.db.showEMATradeWindow )
 	EMA.settingsControl.checkBoxTradeCRItems:SetDisabled( not EMA.db.showEMATradeWindow )
 	EMA.settingsControl.tradeTradeCRItemsTag:SetDisabled( not EMA.db.showEMATradeWindow )
@@ -762,7 +766,7 @@ function EMA.HandleModifiedItemClick(itemLink, itemLocation)
 			--EMA:Print("test2", GUIPanel, "vs", currentModule )
 			if currentModule ~= nil then
 				local itemID, itemLink = GameTooltip:GetItem()
-				local ItemLink = C_Container.GetContainerItemLink(bag, slot)
+				local ItemLink = GetContainerItemLink(bag, slot)
 				--EMA:Print("test1", itemID, itemLink )
 				if itemLink ~= nil then
 					EMA.settingsControl.tradeItemsEditBoxTradeItem:SetText( "" )
@@ -865,14 +869,13 @@ function EMA:TradeAllItems()
 	if EMAApi.IsCharacterInTeam ( characterName ) == false and EMAUtilities:CheckIsFromMyRealm(characterName) == false then
 		return
 	end
+	-- 10.x changes
 	local EMA_NUMBER_BAG_SLOTS = NUM_BAG_SLOTS
-	if EMAPrivate.Core.isEmaClassicBuild() == false then
-		if EMAPrivate.Core.isEmaClassicBccBuild()  == false then
-			EMA_NUMBER_BAG_SLOTS = 5
-		end
+	if EMAPrivate.Core.isEmaClassicBccBuild() == false then
+		EMA_NUMBER_BAG_SLOTS = 5
 	end
 	for bagID = 0, EMA_NUMBER_BAG_SLOTS do		
-		for slotID = 1, C_Container.GetContainerNumSlots( bagID ),1 do	
+		for slotID = 1, GetContainerNumSlots( bagID ),1 do	
 			--EMA:Print( "Bags OK. checking", itemLink )
 			local item = Item:CreateFromBagAndSlot(bagID, slotID)
 			if ( item ) then
@@ -945,7 +948,7 @@ function EMA:TradeAllItems()
 							--EMA:Print("DataTest", itemLink, bagID, slotID )
 							if GetTradePlayerItemLink( iterateTradeSlots ) == nil then
 								-- More 10.x Changes
-								if EMAPrivate.Core.isEmaClassicBuild() == false then
+								if EMAPrivate.Core.isEmaBetaBuild() == true then
 									C_Container.PickupContainerItem( bagID, slotID )
 								else
 									PickupContainerItem( bagID, slotID )

@@ -1,8 +1,8 @@
 -- ================================================================================ --
 --				EMA - ( Ebony's MultiBoxing Assistant )    							--
---				Current Author: Jennifer Calladine (Ebony)								--
+--				Current Author: Jennifer Cally (Ebony)								--
 --																					--
---				License: All Rights Reserved 2018-2025 Jennifer Cally					--
+--				License: All Rights Reserved 2018-2022 Jennifer Calladine					--
 --																					--
 --				Some Code Used from "Jamba" that is 								--
 --				Released under the MIT License 										--
@@ -26,7 +26,7 @@ local EMAHelperSettings = LibStub:GetLibrary( "EMAHelperSettings-1.0" )
 local LibBagUtils = LibStub:GetLibrary( "LibBagUtils-1.0" )
 local LibButtonGlow = LibStub:GetLibrary( "LibButtonGlow-1.0" )
 EMA.SharedMedia = LibStub( "LibSharedMedia-3.0" )
-local TrufiGCD = C_AddOns.IsAddOnLoaded( "TrufiGCD" )
+local TrufiGCD = IsAddOnLoaded( "TrufiGCD" )
 TrufiGCDGlSave = TrufiGCDGlSave
 
 
@@ -2672,19 +2672,7 @@ end
 
 function EMA:SendReputationStatusUpdateCommand()
 	if EMA.db.showTeamList == true and EMA.db.showRepStatus == true then
-		if EMAPrivate.Core.isEmaClassicBccBuild() == true then
-			local reputationName, reputationStandingID, reputationBarMin, reputationBarMax, reputationBarValue = GetWatchedFactionInfo()
-		else
-			local watchedFactionData = C_Reputation.GetWatchedFactionData()
-			--EMA:Print("test", watchedFactionData, watchedFactionData.name, watchedFactionData.reaction, watchedFactionData.currentReactionThreshold, watchedFactionData.nextReactionThreshold, watchedFactionData.currentStanding)    
-			reputationName = watchedFactionData.name
-			reputationStandingID = watchedFactionData.reaction
-			reputationBarMin = watchedFactionData.currentReactionThreshold
-			reputationBarMax = watchedFactionData.nextReactionThreshold
-			reputationBarValue = watchedFactionData.currentStanding
-				
-		end
-		
+		local reputationName, reputationStandingID, reputationBarMin, reputationBarMax, reputationBarValue = GetWatchedFactionInfo()
 		if EMA.db.showTeamListOnMasterOnly == true then
 			EMA:EMASendCommandToMaster( EMA.COMMAND_REPUTATION_STATUS_UPDATE, reputationName, reputationStandingID, reputationBarMin, reputationBarMax, reputationBarValue )
 		else
@@ -3091,6 +3079,7 @@ end
 function EMA:SendComboStatusUpdateCommand()
 	--EMA:Print("test")
 	if EMA.db.showTeamList == true and EMA.db.showComboStatus == true then
+		-- get powerType from http://wowprogramming.com/docs/api_types#powerType as there no real API to get this infomation as of yet.
 		local Class = select(2, UnitClass("player"))
 		--EMA:Print("class", Class)
 		-- Combo Points
@@ -3130,13 +3119,13 @@ function EMA:SendComboStatusUpdateCommand()
 					end	
 			end
 		end	
-		--EMA:Print ("PowerType", PowerType, playerCombo, playerMaxCombo, Class)
+		--EMA:Print ("PowerType", PowerType, playerCombo, playerMaxCombo, class)
 		if EMA.db.showTeamListOnMasterOnly == true then
 			EMA:DebugMessage( "SendComboStatusUpdateCommand TO Master!" )
-			EMA:EMASendCommandToMaster( EMA.COMMAND_COMBO_STATUS_UPDATE, playerCombo, playerMaxCombo, Class )
+			EMA:EMASendCommandToMaster( EMA.COMMAND_COMBO_STATUS_UPDATE, playerCombo, playerMaxCombo, class )
 		else
 			EMA:DebugMessage( "SendComboStatusUpdateCommand TO TEAM!" )
-			EMA:EMASendCommandToTeam( EMA.COMMAND_COMBO_STATUS_UPDATE, playerCombo, playerMaxCombo, Class )
+			EMA:EMASendCommandToTeam( EMA.COMMAND_COMBO_STATUS_UPDATE, playerCombo, playerMaxCombo, class )
 		end
 	end	
 end
@@ -3260,7 +3249,7 @@ function EMA:UpdateSpellStatus( unitTarget, spellID )
 	local GCDFrame = characterStatusBar["GCDFrame"]	
 	local GCDFrameText = characterStatusBar["GCDFrameText"]
 	--EMA:Print("testUpdate", unitTarget )
-	if C_AddOns.IsAddOnLoaded( "TrufiGCD" ) == true then
+	if IsAddOnLoaded( "TrufiGCD" ) == true then
 		local i, _ = TrGCDPlayerDetect(unitTarget)
 		--EMA:Print("test", unitTarget, i )
 		if i > 0 and i <= 5 then
@@ -3277,7 +3266,7 @@ function EMA:SetTrGCOpt()
 	if EMA.db.showTeamList == false and EMA.db.showGCDFrame == false then
 		return
 	end
-	if C_AddOns.IsAddOnLoaded( "TrufiGCD" ) == true then
+	if IsAddOnLoaded( "TrufiGCD" ) == true then
 		local TimeGcd = 1.6
 		for i=1,5 do
 		-- enable
@@ -3367,12 +3356,7 @@ function EMA:OnEnable()
 	EMA:RegisterMessage( EMAApi.MESSAGE_TEAM_MASTER_CHANGED, "OnMasterChanged" )
 	EMA:RegisterMessage( EMAApi.MESSAGE_CHARACTER_ONLINE, "OnCharactersChanged")
 	EMA:RegisterMessage( EMAApi.MESSAGE_CHARACTER_OFFLINE, "OnCharactersChanged")
---	EMA:SecureHook( "SetWatchedFactionIndex" )
-	if EMAPrivate.Core.isEmaClassicBccBuild() == true then	
-		EMA:SecureHook( "SetWatchedFactionIndex" )
-	else
-		EMA:SecureHook( C_Reputation, "SetWatchedFactionByIndex", "SetWatchedFactionIndex" )
-	end
+	EMA:SecureHook( "SetWatchedFactionIndex" )
 	EMA:ScheduleTimer( "RefreshTeamListControls", 3 )
 	EMA:ScheduleTimer( "SendExperienceStatusUpdateCommand", 8 )
 	EMA:ScheduleTimer( "SendReputationStatusUpdateCommand", 5 )

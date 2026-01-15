@@ -1,8 +1,8 @@
 -- ================================================================================ --
 --				EMA - ( Ebony's MultiBoxing Assistant )    							--
---				Current Author: Jennifer Calladine (Ebony)								--
+--				Current Author: Jennifer Cally (Ebony)								--
 --																					--
---				License: All Rights Reserved 2018-2025 Jennifer Cally					--
+--				License: All Rights Reserved 2018-2022 Jennifer Calladine					--
 --																					--
 --				Some Code Used from "Jamba" that is 								--
 --				Released under the MIT License 										--
@@ -30,6 +30,13 @@ local EMAUtilities = LibStub:GetLibrary( "EbonyUtilities-1.0" )
 local EMAHelperSettings = LibStub:GetLibrary( "EMAHelperSettings-1.0" )
 --local LibBagUtils = LibStub:GetLibrary( "LibBagUtils-1.0" )
 local AceGUI = LibStub( "AceGUI-3.0" )
+
+-- Get the container wrappers from Core.
+local GetContainerNumSlots = EMAPrivate.Core.GetContainerNumSlots
+local GetContainerItemInfo = EMAPrivate.Core.GetContainerItemInfo
+local GetContainerItemLink = EMAPrivate.Core.GetContainerItemLink
+local PickupContainerItem = EMAPrivate.Core.PickupContainerItem
+local UseContainerItem = EMAPrivate.Core.UseContainerItem
 
 --  Constants and Locale for this module.
 EMA.moduleName = "Guild"
@@ -792,7 +799,7 @@ function EMA.HandleModifiedItemClick(itemLink, itemLocation)
 			--EMA:Print("test2", GUIPanel, "vs", currentModule )
 			if currentModule ~= nil then
 				local itemID, itemLink = GameTooltip:GetItem()
-				local ItemLink = C_Container.GetContainerItemLink(bag, slot)
+				local ItemLink = GetContainerItemLink(bag, slot)
 				--EMA:Print("test1", itemID, itemLink )
 				if itemLink ~= nil then
 					EMA.settingsControl.GuildItemsEditBoxGuildItem:SetText( "" )
@@ -877,15 +884,12 @@ end
 
 function EMA:AddAllToGuildBank()
 	local delay = 0
-	-- 10.x changes
 	local EMA_NUMBER_BAG_SLOTS = NUM_BAG_SLOTS
-	if EMAPrivate.Core.isEmaClassicBuild() == false then
-		if EMAPrivate.Core.isEmaClassicBccBuild()  == false then
-			EMA_NUMBER_BAG_SLOTS = 5
-		end
+	if EMAPrivate.Core.IsModernApi() == true then
+		EMA_NUMBER_BAG_SLOTS = 5
 	end
 	for bagID = 0, EMA_NUMBER_BAG_SLOTS do
-		for slotID = 1, C_Container.GetContainerNumSlots( bagID ),1 do 
+		for slotID = 1, GetContainerNumSlots( bagID ),1 do 
 			--EMA:Print( "Bags OK. checking", itemLink )
 			local item = Item:CreateFromBagAndSlot(bagID, slotID)
 			if ( item ) then
@@ -970,11 +974,7 @@ function EMA:PlaceItemInGuildBank(bagID, slotID, tab)
 					local texture, count, locked = GetGuildBankItemInfo(tab, slot)
 					if not locked then
 						--PickupContainerItem( bagID ,slotID  )
-						if EMAPrivate.Core.isEmaClassicBuild() == false then
-							C_Container.UseContainerItem( bagID ,slotID  )
-						else
-							UseContainerItem( bagID ,slotID  )
-						end
+						UseContainerItem( bagID ,slotID  )
 					end
 				end				
 			end

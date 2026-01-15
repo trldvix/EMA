@@ -2,7 +2,7 @@
 --				EMA - ( Ebony's MultiBoxing Assistant )    							--
 --				Current Author: Jennifer Cally (Ebony)								--
 --																					--
---				License: All Rights Reserved 2018-2025 Jennifer Cally					--
+--				License: All Rights Reserved 2018-2022 Jennifer Calladine					--
 --																					--
 --				Some Code Used from "Jamba" that is 								--
 --				Released under the MIT License 										--
@@ -348,8 +348,8 @@ local function SettingsCreateTeamList()
 		EMA.settingsControl, 
 		iconSize,
 		iconSize,
-		"Interface\\Addons\\EMA\\Media\\CharAdd.tga", --icon Image
-		left - iconSize - 11 , 
+		"Interface\\AddOns\\EMA\\Media\\CharAdd.tga", --icon Image
+		left + 4, 
 		topOfList - verticalSpacing, 
 		L[""], 
 		EMA.SettingsAddClick,
@@ -359,33 +359,33 @@ local function SettingsCreateTeamList()
 		EMA.settingsControl, 
 		iconSize,
 		iconSize,
-		"Interface\\Addons\\EMA\\Media\\CharAddParty.tga", --icon Image
-		left - iconSize - 11 , 
-		topOfList - verticalSpacing - iconHight, 
+		"Interface\\AddOns\\EMA\\Media\\CharAddParty.tga", --icon Image
+		left + 4, 
+		topOfList - verticalSpacing - (iconHight * 1), 
 		L[""], 
 		EMA.SettingsAddPartyClick,
 		L["BUTTON_ADDALL_HELP"]
 	)
---[[	
+	
 	EMA.settingsControl.teamListButtonAddIsboxerList = EMAHelperSettings:Icon( 
 		EMA.settingsControl, 
 		iconSize,
 		iconSize,
-		"Interface\\Addons\\EMA\\Media\\Isboxer_Add.tga", --icon Image
-		left - iconSize - 11 , 
-		topOfList - verticalSpacing - iconHight * 2, 
+		"Interface\\AddOns\\EMA\\Media\\Isboxer_Add.tga", --icon Image
+		left + 4, 
+		topOfList - verticalSpacing - (iconHight * 2), 
 		L[""], 
 		EMA.SettingsAddIsboxerListClick,
 		L["BUTTON_ISBOXER_ADD_HELP"]
 	)
-]]	
+	
 	EMA.settingsControl.teamListButtonMoveUp = EMAHelperSettings:Icon( 
 		EMA.settingsControl, 
 		iconSize,
 		iconSize,
-		"Interface\\Addons\\EMA\\Media\\CharUp.tga", --icon Image
-		left - iconSize - 11,
-		topOfList - verticalSpacing - iconHight * 2, 
+		"Interface\\AddOns\\EMA\\Media\\CharUp.tga", --icon Image
+		left + 4,
+		topOfList - verticalSpacing - (iconHight * 3), 
 		L[""], 
 		EMA.SettingsMoveUpClick,
 		L["BUTTON_UP_HELP"]
@@ -394,9 +394,9 @@ local function SettingsCreateTeamList()
 		EMA.settingsControl, 
 		iconSize,
 		iconSize,	
-		"Interface\\Addons\\EMA\\Media\\CharDown.tga", --icon Image
-		left - iconSize - 11,
-		topOfList - verticalSpacing - iconHight * 3,
+		"Interface\\AddOns\\EMA\\Media\\CharDown.tga", --icon Image
+		left + 4,
+		topOfList - verticalSpacing - (iconHight * 4),
 		L[""],
 		EMA.SettingsMoveDownClick,
 		L["BUTTON_DOWN_HELP"]		
@@ -405,9 +405,9 @@ local function SettingsCreateTeamList()
 		EMA.settingsControl, 
 		iconSize,
 		iconSize,
-		"Interface\\Addons\\EMA\\Media\\CharRemove.tga", --icon Image
-		left - iconSize - 11 , 
-		topOfList - verticalSpacing - iconHight * 4,
+		"Interface\\AddOns\\EMA\\Media\\CharRemove.tga", --icon Image
+		left + 4, 
+		topOfList - verticalSpacing - (iconHight * 5),
 		L[""], 
 		EMA.SettingsRemoveClick,
 		L["BUTTON_REMOVE_HELP"]
@@ -416,9 +416,9 @@ local function SettingsCreateTeamList()
 		EMA.settingsControl, 
 		iconSize,
 		iconSize,
-		"Interface\\Addons\\EMA\\Media\\CharMaster.tga", --icon Image
-		left - iconSize - 11 , 
-		topOfList - verticalSpacing - iconHight * 5,
+		"Interface\\AddOns\\EMA\\Media\\CharMaster.tga", --icon Image
+		left + 4, 
+		topOfList - verticalSpacing - (iconHight * 6),
 		L[""], 
 		EMA.SettingsSetMasterClick,
 		L["BUTTON_MASTER_HELP"]
@@ -559,7 +559,7 @@ local function SettingsCreatePartyInvitationsControl( top )
 		headingWidth, 
 		left, 
 		top - headingHeight  - checkBoxHeight - checkBoxHeight - checkBoxHeight - checkBoxHeight - checkBoxHeight,
-		"You Can Use the current [/click] in macros"
+		"You Can Use the current [\Click] in macros"
 	)	
 	EMA.settingsControl.CickInformationlabel = EMAHelperSettings:CreateLabel( 
 		EMA.settingsControl, 
@@ -604,9 +604,45 @@ local function SettingsCreate()
 	-- Create the party invitation controls.
 	local bottomOfPartyInvitationControl = SettingsCreatePartyInvitationsControl( bottomOfMasterControl )
 	EMA.settingsControl.widgetSettings.content:SetHeight( - bottomOfPartyInvitationControl )
+	-- Create the ISBoxer sub-page.
+	SettingsCreateISBoxer()
 	-- Help
 	local helpTable = {}
 	EMAHelperSettings:CreateHelp( EMA.settingsControl, helpTable, EMA:GetConfiguration() )	
+end
+
+function SettingsCreateISBoxer()
+	EMA.settingsControlIsboxer = {}
+	-- Create the settings panel.
+	EMAHelperSettings:CreateSettings( 
+		EMA.settingsControlIsboxer, 
+		L["ISBOXER"], 
+		L["TEAM"], 
+		nil,
+		"Interface\\AddOns\\EMA\\Media\\Isboxer_Add.tga",
+		30
+	)
+	local headingHeight = EMAHelperSettings:HeadingHeight()
+	local headingWidth = EMAHelperSettings:HeadingWidth( false )
+	local left = EMAHelperSettings:LeftOfSettings()
+	local top = EMAHelperSettings:TopOfSettings()
+	local verticalSpacing = EMAHelperSettings:GetVerticalSpacing()
+	local buttonHeight = EMAHelperSettings:GetButtonHeight()
+	
+	EMAHelperSettings:CreateHeading( EMA.settingsControlIsboxer, L["ISBOXER"], top, false )
+	
+	local importButtonWidth = 200
+	EMA.settingsControlIsboxer.buttonImport = EMAHelperSettings:CreateButton(
+		EMA.settingsControlIsboxer,
+		importButtonWidth,
+		left,
+		top - headingHeight - verticalSpacing,
+		"Import From ISBoxer",
+		EMA.SettingsAddIsboxerListClick,
+		"Import character names from your current ISBoxer character set."
+	)
+	
+	EMA.settingsControlIsboxer.widgetSettings.content:SetHeight( headingHeight + buttonHeight + verticalSpacing * 2 )
 end
 
 -------------------------------------------------------------------------------------------------------------
@@ -616,44 +652,35 @@ end
 -- Initialize Popup Dialogs.
 local function InitializePopupDialogs()
    -- Ask the name of the character to add as a new member.
-   -- DEV: 11.2 do i really wanna fix the < 3 chars for a name bullshit??
    StaticPopupDialogs["EMATEAM_ASK_CHARACTER_NAME"] = {
         text = L["STATICPOPUP_ADD"],
         button1 = ACCEPT,
         button2 = CANCEL,
         hasEditBox = 1,
-		timeout = 0,
+        timeout = 0,
 		whileDead = 1,
 		hideOnEscape = 1,
 		OnShow = function( self )
-			self.EditBox:SetText("")
-            --self.GetButton1():Disable()
-            self.EditBox:SetFocus()
+			self.editBox:SetText("")
+            self.button1:Disable()
+            self.editBox:SetFocus()
         end,
 		OnAccept = function( self )
-			EMA:AddMemberGUI( self.EditBox:GetText() )
+			EMA:AddMemberGUI( self.editBox:GetText() )
 		end,
-		--[[
 		EditBoxOnTextChanged = function( self )
-			if not self:GetText() or self:GetText():trim() == "" then
-				--self:button1:Disable()
-				--self:GetParent().
-				--slef:GetButton1():Disable()
+            if not self:GetText() or self:GetText():trim() == "" then
+				self:GetParent().button1:Disable()
             else
-               --self:GetParent().button1:Enable()
-            end	
+                self:GetParent().button1:Enable()
+            end
         end,
-		]]
-		--DEV NOTE: mixinout bullshit
-		--EditBoxOnEnterPressed = function( self )
-		--	EMA:AddMemberGUI( self.EditBox:GetText() )   
-			--[[
-			if self:GetParent().button1:IsEnabled() then
+		EditBoxOnEnterPressed = function( self )
+            if self:GetParent().button1:IsEnabled() then
 				EMA:AddMemberGUI( self:GetText() )
             end
             self:GetParent():Hide()
-			]]
-        --end,			
+        end,			
     }
    -- Confirm removing characters from member list.
    StaticPopupDialogs["EMATEAM_CONFIRM_REMOVE_CHARACTER"] = {
@@ -886,6 +913,7 @@ end
 
 -- Add all party/raid members to the member list. does not worl cross rwalm todo
 function EMA:AddPartyMembers()
+	AddMember( "player" )
 	 for iteratePartyMembers = 1, GetNumGroupMembers() do	
 		--EMA:Print("party/raid", numberPartyMembers, iteratePartyMembers)
 		local inRaid = IsInRaid()
@@ -1231,12 +1259,10 @@ end
 
 function EMA.DoTeamPartyInvite()
 	--EMA:Print("teamInvite", EMA.inviteList[EMA.currentInviteCount])	
-	if EMAPrivate.Core.isEmaClassicBuild() == true then
+	if EMAPrivate.Core.isEmaClassicBuild() == true or EMAPrivate.Core.isEmaClassicBccBuild() == true then
 		InviteUnit( EMA.inviteList[EMA.currentInviteCount] )
 	else	
-		if EMA.inviteList[EMA.currentInviteCount] ~= nil then
-			C_PartyInfo.InviteUnit( EMA.inviteList[EMA.currentInviteCount] )
-		end	
+		C_PartyInfo.InviteUnit( EMA.inviteList[EMA.currentInviteCount] )
 	end
 	EMA.currentInviteCount = EMA.currentInviteCount + 1
 	if EMA.currentInviteCount < EMA.inviteCount then
@@ -1246,11 +1272,7 @@ function EMA.DoTeamPartyInvite()
 				C_PartyInfo.ConvertToRaid()
 				SetEveryoneIsAssistant(true)
 			else				
-				if EMAPrivate.Core.isEmaClassicBuild() == true then
-					ConvertToRaid()
-				else
-					C_PartyInfo.ConvertToRaid()
-				end
+				C_PartyInfo.ConvertToRaid()
 			end
 		end
 		EMA:ScheduleTimer( "DoTeamPartyInvite", 0.5 )
@@ -1403,11 +1425,11 @@ end
 
 local function LeaveTheParty()
 	if IsInGroup( "player" ) then
-		--if EMAPrivate.Core.isEmaClassicBuild() == true then
-		--	LeaveParty()
-		--else
-		C_PartyInfo.LeaveParty()
-		--end		
+		if EMAPrivate.Core.isEmaClassicBuild() == true then
+			LeaveParty()
+		else
+			C_PartyInfo.LeaveParty()
+		end		
 	end
 end
 
@@ -1491,17 +1513,30 @@ function EMA:ReceiveClickToMove( characterName, tag )
 	end	
 end
 
---[[
 function EMA:AddIsboxerMembers()
-	if IsAddOnLoaded("Isboxer" ) then
+	local isLoaded = false
+	if C_AddOns and C_AddOns.IsAddOnLoaded then
+		isLoaded = C_AddOns.IsAddOnLoaded("ISBoxer")
+	elseif IsAddOnLoaded then
+		isLoaded = IsAddOnLoaded("ISBoxer")
+	end
+	
+	if isLoaded then
 		for slot, characterName in EMAApi.IsboxerTeamList() do
-			EMAApi.AddMember( characterName )
+			AddMember( characterName )
 		end	
 	else
-		EMA:Print(L["ISBOXER_ADDON_NOT_LOADED"])
+		-- Try to check global 'isboxer' table anyway, as some setups might not trigger IsAddOnLoaded correctly.
+		local count = 0
+		for slot, characterName in EMAApi.IsboxerTeamList() do
+			AddMember( characterName )
+			count = count + 1
+		end
+		if count == 0 then
+			EMA:Print(L["ISBOXER_ADDON_NOT_LOADED"])
+		end
 	end	
 end
-]]
 
 -------------------------------------------------------------------------------------------------------------
 -- Addon initialization, enabling and disabling.
@@ -2020,11 +2055,9 @@ function EMA.SettingsAddPartyClick( event )
 	EMA:AddPartyMembers()
 end
 
---[[
 function EMA:SettingsAddIsboxerListClick( event )
 	EMA:AddIsboxerMembers()
 end
-]]
 
 function EMA:SettingsInviteClick( event )
 	EMA:InviteTeamToParty(nil)
@@ -2304,3 +2337,14 @@ EMAApi.CommandIAmMaster = EMA.CommandIAmMaster
 EMAApi.GroupAreaList = EMA.GroupAreaList
 EMAApi.refreshDropDownList = refreshDropDownList
 EMAApi.UpdateMacros = EMA.UpdateMacros
+
+local function IsboxerTeamList()
+	local teamList = {}
+	local isboxerObj = _G["isboxer"] or _G["ISBoxer"]
+	if isboxerObj and isboxerObj.CharacterSet and isboxerObj.CharacterSet.Members then
+		return pairs( isboxerObj.CharacterSet.Members )
+	end
+	return pairs( teamList )
+end
+
+EMAApi.IsboxerTeamList = IsboxerTeamList

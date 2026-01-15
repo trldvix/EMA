@@ -1,0 +1,1 @@
+WoW TBC Anniversary compatibility fix for [EMA](https://github.com/ebonyfaye/ema)

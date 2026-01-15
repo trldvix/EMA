@@ -40,27 +40,18 @@ local GetItemInfo, GetItemFamily = GetItemInfo, GetItemFamily
 local function isClassicBuild()
 	local isClassicBuild = false
 	local _, _, _, tocversion = GetBuildInfo()
-	if tocversion >= 10000 and tocversion <= 50000 then
+	if tocversion >= 10000 and tocversion <= 40000 then
 		isClassicBuild = true
 	end
 	return isClassicBuild
 end	
 
-local function isWotlkBuild()
-	local isWotlkBuild = false
-	local _, _, _, tocversion = GetBuildInfo()
-	if tocversion >= 30000 and tocversion <= 40000 then
-		isWotlkBuild = true
-	end
-	return isWotlkBuild
-end	
-
-local WoW10 = select(4, GetBuildInfo()) >= 100000											
+local WoW10 = select(4, GetBuildInfo()) >= 100002
+											
 
 local BANK_CONTAINER = BANK_CONTAINER
 -- local KEYRING_CONTAINER = KEYRING_CONTAINER
--- Not sure if this will be a problem ebony!
---local NUM_BANKBAGSLOTS = NUM_BANKBAGSLOTS
+local NUM_BANKBAGSLOTS = NUM_BANKBAGSLOTS
 local NUM_BAG_SLOTS = NUM_BAG_SLOTS
 local REAGENTBANK_CONTAINER = REAGENTBANK_CONTAINER
 
@@ -265,13 +256,13 @@ for i=1,NUM_BAG_SLOTS do
 end
 bags.BAGS[BACKPACK_CONTAINER]=BACKPACK_CONTAINER
 -- bags.BAGS[KEYRING_CONTAINER]=KEYRING_CONTAINER
---[[
+
 -- Bank bags
 for i=NUM_BAG_SLOTS+1,NUM_BAG_SLOTS+NUM_BANKBAGSLOTS do
 	bags.BANK[i]=i
 end
 bags.BANK[BANK_CONTAINER]=BANK_CONTAINER
-]]
+
 -- Both
 for k,v in pairs(bags.BAGS) do
 	bags.BAGSBANK[k]=v
@@ -281,11 +272,9 @@ for k,v in pairs(bags.BANK) do
 end
 
 -- Reagent Bank
---[[
 if isClassicBuild() == false then
 	bags.REAGENTBANK[REAGENTBANK_CONTAINER] = REAGENTBANK_CONTAINER
 end
-]]
 
 local function iterbags(tab, cur)
 	cur = next(tab, cur)
@@ -356,15 +345,19 @@ function lib:CountSlots(which, itemFamily)
 	
 	if not itemFamily then
 		for bag in pairs(baglist) do
-				free = free + C_Container.myGetContainerNumFreeSlots(bag)
-				tot = tot + C_Container.GetContainerNumSlots(bag)
+			free = free + myGetContainerNumFreeSlots(bag)
+			tot = tot + GetContainerNumSlots(bag)
 		end
 	elseif itemFamily==0 then
 		for bag in pairs(baglist) do
-			local f,bagFamily = C_Container.GetContainerNumFreeSlots(bag)
+			if WoW10 == true then 
+				local f,bagFamily = C_Container.GetContainerNumFreeSlots(bag)
+			else
+				local f,bagFamily = GetContainerNumFreeSlots(bag)
+			end
 			if bagFamily==0 then
 				free = free + f
-				tot = tot + C_Container.GetContainerNumSlots(bag)
+				tot = tot + GetContainerNumSlots(bag)
 			end
 		end
 	else
@@ -372,7 +365,7 @@ function lib:CountSlots(which, itemFamily)
 			local f,bagFamily = myGetContainerNumFreeSlots(bag)
 			if bagFamily and band(itemFamily,bagFamily)~=0 then
 				free = free + f
-				tot = tot + C_Container.GetContainerNumSlots(bag)
+				tot = tot + GetContainerNumSlots(bag)
 			end
 		end
 	end
@@ -387,12 +380,12 @@ end
 -- bag        - number: bag number
 --
 -- Returns true if the given bag is a bank bag
---[[
+
 function lib:IsBank(bag, incReagentBank)
 	return bag==BANK_CONTAINER or
 		(bag>=NUM_BAG_SLOTS+1 and bag<=NUM_BAG_SLOTS+NUM_BANKBAGSLOTS) or (incReagentBank and lib:IsReagentBank(bag))
 end
-]]
+
 -----------------------------------------------------------------------
 -- API :IsReagentBank(bag)
 --

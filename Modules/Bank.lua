@@ -1,8 +1,8 @@
 -- ================================================================================ --
 --				EMA - ( Ebony's MultiBoxing Assistant )    							--
---				Current Author: Jennifer Calladine (Ebony)								--
+--				Current Author: Jennifer Cally (Ebony)								--
 --																					--
---				License: All Rights Reserved 2018-2025 Jennifer Cally					--
+--				License: All Rights Reserved 2018-2022 Jennifer Calladine					--
 --																					--
 --				Some Code Used from "Jamba" that is 								--
 --				Released under the MIT License 										--
@@ -26,6 +26,17 @@ local EMAUtilities = LibStub:GetLibrary( "EbonyUtilities-1.0" )
 local EMAHelperSettings = LibStub:GetLibrary( "EMAHelperSettings-1.0" )
 --local LibBagUtils = LibStub:GetLibrary( "LibBagUtils-1.0" )
 local AceGUI = LibStub( "AceGUI-3.0" )
+
+-- Get the EMA private extraction.
+local AJ = EMAPrivate.Core
+
+-- Addon: Local Aliases
+local GetContainerNumSlots = AJ.GetContainerNumSlots
+local GetContainerItemLink = AJ.GetContainerItemLink
+local GetContainerItemInfo = AJ.GetContainerItemInfo
+local GetContainerItemItemLink = AJ.GetContainerItemItemLink
+local PickupContainerItem = AJ.PickupContainerItem
+local UseContainerItem = AJ.UseContainerItem
 
 --  Constants and Locale for this module.
 EMA.moduleName = "Bank"
@@ -728,8 +739,7 @@ end
 
 function EMA.HandleModifiedItemClick(itemLink, itemLocation)
 	if itemLocation ~= nil then -- item location is only not nil for bag item clicks
-		local button = GetMouseButtonClicked()
-		local bag, slot = itemLocation.bagID, itemLocation.slotIndex
+		local bagID, slotID = itemLocation:GetBagAndSlot()
 		
 		local isConfigOpen = EMAPrivate.SettingsFrame.Widget:IsVisible()
 		if isConfigOpen == true and IsControlKeyDown() == true then
@@ -737,13 +747,11 @@ function EMA.HandleModifiedItemClick(itemLink, itemLocation)
 			local currentModule = string.find(GUIPanel, EMA.moduleDisplayName) 
 			--EMA:Print("test2", GUIPanel, "vs", currentModule )
 			if currentModule ~= nil then
-				local itemID, itemLink = GameTooltip:GetItem()
-				local ItemLink = C_Container.GetContainerItemLink(bag, slot)
-				--EMA:Print("test1", itemID, itemLink )
-				if itemLink ~= nil then
+				local itemInfo = GetContainerItemInfo(bagID, slotID)
+				if itemInfo and itemInfo.hyperlink then
 					EMA.settingsControl.BankItemsEditBoxBankItem:SetText( "" )
-				EMA.settingsControl.BankItemsEditBoxBankItem:SetText( itemLink )
-				EMA.autoBankItemLink = itemLink	
+					EMA.settingsControl.BankItemsEditBoxBankItem:SetText( itemInfo.hyperlink )
+					EMA.autoBankItemLink = itemInfo.hyperlink
 					return
 				end
 			end
@@ -831,15 +839,12 @@ end
 
 function EMA:AddAllToBank()
 	--EMA:Print("run")
-	-- 10.x changes
 	local EMA_NUMBER_BAG_SLOTS = NUM_BAG_SLOTS
-	if EMAPrivate.Core.isEmaClassicBuild() == false then
-		if EMAPrivate.Core.isEmaClassicBccBuild()  == false then
-			EMA_NUMBER_BAG_SLOTS = 5
-		end
+	if EMAPrivate.Core.IsModernApi() == true then
+		EMA_NUMBER_BAG_SLOTS = 5
 	end
 	for bagID = 0, EMA_NUMBER_BAG_SLOTS do
-		for slotID = 1, C_Container.GetContainerNumSlots( bagID ),1 do 
+		for slotID = 1, GetContainerNumSlots( bagID ), 1 do 
 			--EMA:Print( "Bags OK. checking", itemLink )
 			local item = Item:CreateFromBagAndSlot(bagID, slotID)
 			if ( item ) then
@@ -893,21 +898,14 @@ function EMA:AddAllToBank()
 					end
 					
 					if canSend == true then
+						PickupContainerItem( bagID, slotID )
 						--EMA:Print("test", isCraftingReagent )
 						-- 10.x stuff
-						if EMAPrivate.Core.isEmaClassicBuild() == false then
-							if isCraftingReagent == true then
-								C_Container.UseContainerItem( bagID , slotID, nil, true )
-							else
-								C_Container.UseContainerItem( bagID , slotID )
-							end
+						if isCraftingReagent == true then
+							UseContainerItem( bagID , slotID, nil, true )
 						else
-							if isCraftingReagent == true then
-								UseContainerItem( bagID , slotID, nil, true )
-							else
-								UseContainerItem( bagID , slotID )
-							end
-						end	
+							UseContainerItem( bagID , slotID )
+						end
 					end
 				end	
 			end

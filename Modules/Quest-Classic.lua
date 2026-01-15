@@ -1,8 +1,8 @@
 -- ================================================================================ --
 --				EMA - ( Ebony's MultiBoxing Assistant )    							--
---				Current Author: Jennifer Calladine (Ebony)								--
+--				Current Author: Jennifer Cally (Ebony)								--
 --																					--
---				License: All Rights Reserved 2018-2025 Jennifer Cally					--
+--				License: All Rights Reserved 2018-2020 Jennifer Cally					--
 --																					--
 --				Some Code Used from "Jamba" that is 								--
 --				Released under the MIT License 										--
@@ -251,13 +251,8 @@ function EMA:OnEnable()
 	EMA:RegisterEvent( "CHAT_MSG_SYSTEM", "QUEST_FAIL" )
    -- Quest post hooks.
     EMA:SecureHook( "SelectGossipOption" )
-    if EMAPrivate.Core.isEmaClassicBuild() == true then
-		EMA:SecureHook( "SelectGossipActiveQuest" )
-		EMA:SecureHook( "SelectGossipAvailableQuest" )
-	else	
-		EMA:SecureHook( C_GossipInfo, "SelectActiveQuest" )
-		EMA:SecureHook( C_GossipInfo, "SelectAvailableQuest" )
-    end
+    EMA:SecureHook( "SelectGossipActiveQuest" )
+    EMA:SecureHook( "SelectGossipAvailableQuest" )
     EMA:SecureHook( "SelectActiveQuest" )
     EMA:SecureHook( "SelectAvailableQuest" )
     EMA:SecureHook( "AcceptQuest" )
@@ -1960,7 +1955,7 @@ function EMA:CreateEMAMiniQuestLogFrame()
 		frame:SetPoint("BOTTOMLEFT", QuestLogFrame, "BOTTOMLEFT", 40, -80)
 	else
 		local _, _, _, tocversion = GetBuildInfo()
-		if tocversion >= 30000 and tocversion <= 50000 then
+		if tocversion >= 30000 and tocversion <= 40000 then
 			frame:SetPoint("BOTTOMLEFT", QuestLogFrame, "BOTTOMLEFT", 10 , -70 )--40, -30)
 		else
 			frame:SetPoint("BOTTOMLEFT", QuestLogFrame, "BOTTOMLEFT", 40, -30)

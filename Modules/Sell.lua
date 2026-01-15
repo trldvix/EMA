@@ -1,8 +1,8 @@
 -- ================================================================================ --
 --				EMA - ( Ebony's MultiBoxing Assistant )    							--
---				Current Author: Jennifer Calladine (Ebony)								--
+--				Current Author: Jennifer Cally (Ebony)								--
 --																					--
---				License: All Rights Reserved 2018-2025 Jennifer Cally					--
+--				License: All Rights Reserved 2018-2022 Jennifer Calladine					--
 --																					--
 --				Some Code Used from "Jamba" that is 								--
 --				Released under the MIT License 										--
@@ -24,6 +24,12 @@ local EMA = LibStub( "AceAddon-3.0" ):NewAddon(
 local EMAUtilities = LibStub:GetLibrary( "EbonyUtilities-1.0" )
 local EMAHelperSettings = LibStub:GetLibrary( "EMAHelperSettings-1.0" )
 local AceGUI = LibStub:GetLibrary( "AceGUI-3.0" )
+
+-- Get API wrappers from Core.
+local GetContainerNumSlots = EMAPrivate.Core.GetContainerNumSlots
+local GetContainerItemInfo = EMAPrivate.Core.GetContainerItemInfo
+local GetContainerItemLink = EMAPrivate.Core.GetContainerItemLink
+local GetContainerItemItemLink = EMAPrivate.Core.GetContainerItemItemLink
 local ItemUpgradeInfo = LibStub:GetLibrary( "LibItemUpgradeInfo-1.0" )
 
 --  Constants and Locale for this module.
@@ -814,17 +820,8 @@ end
 -- The ContainerFrameItemButton_OnModifiedClick hook.
 function EMA:ContainerFrameItemButton_OnModifiedClick( self, event, ... )
 	if EMA.db.sellItemOnAllWithAltKey == true and IsAltKeyDown() and EMAUtilities:MerchantFrameIsShown() then
-		local link = nil
 		local bag, slot = self:GetParent():GetID(), self:GetID()
-		if EMAPrivate.Core.isEmaClassicBuild() == true then	
-			local texture, count, locked, quality, readable, lootable, link = GetContainerItemInfo( bag, slot )
-			link = link
-		else 
-			local containerInfo = C_Container.GetContainerItemInfo(bag, slot)
-			local _ , item = GetItemInfo( containerInfo.itemID )
-			link = item
-		end	
-		--EMA:Print("canSell", link)
+		local texture, count, locked, quality, readable, lootable, link = GetContainerItemInfo( bag, slot )
 		EMA:EMASendCommandToTeam( EMA.COMMAND_SELL_ITEM, link )
 	end
 	local isConfigOpen = EMAPrivate.SettingsFrame.Widget:IsVisible()
@@ -854,8 +851,8 @@ function EMA.HandleModifiedItemClick(itemLink, itemLocation)
 		local bag, slot = itemLocation.bagID, itemLocation.slotIndex
 		if EMA.db.sellItemOnAllWithAltKey == true and IsAltKeyDown() and EMAUtilities:MerchantFrameIsShown() and button ~= nil then
 			--local bag, slot = self:GetParent():GetID(), self:GetID()
-			local containerInfo = C_Container.GetContainerItemInfo(bag, slot)
-			local _, item = GetItemInfo( containerInfo.itemID )
+			local ItemLink = GetContainerItemLink(bag, slot)
+			local _, item = GetItemInfo( ItemLink )
 			--EMA:Print("test", item)
 			EMA:EMASendCommandToTeam( EMA.COMMAND_SELL_ITEM, item )
 		end
@@ -867,7 +864,7 @@ function EMA.HandleModifiedItemClick(itemLink, itemLocation)
 			--EMA:Print("test2", GUIPanel, "vs", currentModule )
 			if currentModule ~= nil then
 				local itemID, itemLink = GameTooltip:GetItem()
-				local ItemLink = C_Container.GetContainerItemLink(bag, slot)
+				local ItemLink = GetContainerItemLink(bag, slot)
 				--EMA:Print("test1", itemID, itemLink )
 				if itemLink ~= nil then
 					EMA.settingsControl.listEditBoxOtherItem:SetText( "" )
@@ -882,14 +879,8 @@ function EMA.HandleModifiedItemClick(itemLink, itemLocation)
 end
 
 function EMA:DoSellItem( itemlink )
-	--EMA:Print("SELLME", itemlink) 
-	local itemCount = 0
-	local EMA_NUMBER_BAG_SLOTS = NUM_BAG_SLOTS
-	if EMAPrivate.Core.isEmaClassicBccBuild()  == false then
-		EMA_NUMBER_BAG_SLOTS = 5
-	end
 	for bagID = 0, EMA_NUMBER_BAG_SLOTS do
-		for slotID = 1, C_Container.GetContainerNumSlots( bagID ),1 do 
+		for slotID = 1, GetContainerNumSlots( bagID ),1 do 
 			--EMA:Print( "Bags OK. checking", itemLink )
 			local item = Item:CreateFromBagAndSlot(bagID, slotID)
 			if ( item ) then
@@ -898,11 +889,11 @@ function EMA:DoSellItem( itemlink )
 				if (bagItemLink ) then
 					if EMAUtilities:DoItemLinksContainTheSameItem( bagItemLink, itemlink ) then
 						if EMAUtilities:MerchantFrameIsShown() == true then	
-							if EMAPrivate.Core.isEmaClassicBuild() == false then
-								C_Container.UseContainerItem( bagID, slotID )
+							if C_Container and C_Container.UseContainerItem then
+								C_Container.UseContainerItem( bagID, slotID ) 
 							else
 								UseContainerItem( bagID, slotID )
-							end	
+							end
 							-- Tell the Boss.
 							EMA:EMASendMessageToTeam( EMA.db.messageArea, L["I_HAVE_SOLD_X"]( bagItemLink ), false )
 						end
@@ -982,13 +973,13 @@ function EMA:DoMerchantSellItems()
 	local count = 0
 	local sellCount = 0
 	local gold = 0
+	local bagContainerName = GetContainerNumSlots
 	local itemCount = 0
-	local EMA_NUMBER_BAG_SLOTS = NUM_BAG_SLOTS
 	if EMAPrivate.Core.isEmaClassicBccBuild() == false then
-		EMA_NUMBER_BAG_SLOTS = 5
+		bagContainerName = C_Container.GetContainerNumSlots
 	end
-	for bagID = 0, EMA_NUMBER_BAG_SLOTS do
-		for slotID = 1, C_Container.GetContainerNumSlots( bagID ) do 
+	for bagID = 0, NUM_BAG_SLOTS do
+		for slotID = 1, bagContainerName( bagID ) do 
 			--EMA:Print( "Bags OK. checking", itemLink )
 			local item = Item:CreateFromBagAndSlot(bagID, slotID)
 			if ( item ) then
@@ -1000,15 +991,9 @@ function EMA:DoMerchantSellItems()
 					local isBop = C_Item.IsBound( location )
 					local itemRarity =  C_Item.GetItemQuality( location )
 					local iLvl = C_Item.GetCurrentItemLevel( location )
-					--if EMAPrivate.Core.isEmaClassicBuild() == false then
-						local containerInfo = C_Container.GetContainerItemInfo( bagID, slotID )
-						itemCount =  containerInfo.stackCount
-					--[[
-					else
-						local _, itemCountOld = GetContainerItemInfo( bagID, slotID )
-						itemCount = itemCountOld
-					end
-					]]					--EMA:Print("test", itemLink, itemCount, count)
+					local _, itemCountOld = GetContainerItemInfo( bagID, slotID )
+					itemCount = itemCountOld
+					--EMA:Print("test", itemLink, itemCount, count)
 					local itemName, _, _, _, _, _, _, _, _, _, itemSellPrice = GetItemInfo( itemLink )
 					if EMAPrivate.Core.isEmaClassicBccBuild() == false then	
 						local hasToy = PlayerHasToy(bagItemID)
@@ -1177,13 +1162,11 @@ end
 function EMA:SellItem( bagID, slotID, itemCount )
 	--EMA:Print("sellItem", bagID, slotID, itemCount )
 	if EMAUtilities:MerchantFrameIsShown() == true then	
-		--if EMAPrivate.Core.isEmaClassicBuild() == false then
+		if EMAPrivate.Core.isEmaClassicBccBuild() == false then
 			C_Container.UseContainerItem( bagID, slotID )	
-		--[[
 		else		
 			UseContainerItem( bagID, slotID )
-		end
-]]		
+		end		
 	end	
 end
 

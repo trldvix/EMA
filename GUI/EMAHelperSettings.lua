@@ -2,7 +2,7 @@
 --				EMA - ( Ebony's MultiBoxing Assistant )    							--
 --				Current Author: Jennifer Cally (Ebony)								--
 --																					--
---				License: All Rights Reserved 2018-2025 Jennifer Cally					--
+--				License: All Rights Reserved 2018-2022 Jennifer Calladine					--
 --																					--
 --				Some Code Used from "Jamba" that is 								--
 --				Released under the MIT License 										--
@@ -35,8 +35,8 @@ AceGUI:RegisterLayout("EMAuiFill",
 			local width = content:GetWidth()
 			children[1]:SetWidth(width)
 			children[1]:SetHeight(height)
-			children[1]:SetPoint( "TOPLEFT", 0, -offset )
 			children[1]:ClearAllPoints()
+			children[1]:SetPoint( "TOPLEFT", 0, -offset )
 			children[1].frame:Show()
 			
 		end
@@ -53,8 +53,8 @@ AceGUI:RegisterLayout("EMAFillAce3Fix",
 			local width = content:GetWidth()
 			children[1]:SetWidth(width)
 			children[1]:SetHeight(height)
-			children[1]:SetPoint("TOPLEFT", content)
 			children[1]:ClearAllPoints()
+			children[1]:SetPoint("TOPLEFT", content)
 			children[1].frame:Show()
 			
 		end
@@ -220,7 +220,10 @@ function EMAHelperSettings:Icon( settingsControl, sizeW, sizeH, image, left, top
 	icon:SetLabel( text )
 	icon:SetImage ( image )
 	icon:SetImageSize( sizeW, sizeH )
+	icon:SetWidth( sizeW )
+	icon:SetHeight( sizeH )
 	settingsControl.widgetSettings:AddChild( icon )
+	icon:ClearAllPoints()
 	icon:SetPoint( "TOPLEFT", settingsControl.widgetSettings.content, "TOPLEFT", left, top )
 	icon:SetCallback( "OnClick", buttonCallback )	
 	icon:SetUserData("tooltip", toolTip)

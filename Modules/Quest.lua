@@ -1,8 +1,8 @@
 -- ================================================================================ --
 --				EMA - ( Ebony's MultiBoxing Assistant )    							--
---				Current Author: Jennifer Calladine (Ebony)								--
+--				Current Author: Jennifer Cally (Ebony)								--
 --																					--
---				License: All Rights Reserved 2018-2025 Jennifer Cally				--
+--				License: All Rights Reserved 2018-2022 Jennifer Calladine					--
 --																					--
 --				Some Code Used from "Jamba" that is 								--
 --				Released under the MIT License 										--
@@ -124,10 +124,8 @@ end
 -------------------------------------------------------------------------------------------------------------
 
 EMA.COMMAND_SELECT_GOSSIP_OPTION = "EMASelectGossipOption"
-EMA.COMMAND_SELECT_GOSSIP_OPTION_INDEX = "EMASelectGossipOptionIndex"
 EMA.COMMAND_SELECT_GOSSIP_ACTIVE_QUEST = "EMASelectGossipActiveQuest"
 EMA.COMMAND_SELECT_GOSSIP_AVAILABLE_QUEST = "EMASelectGossipAvailableQuest"
-EMA.COMMAND_CLOSE_GOSSIP = "EMACloseGossipWindow"
 EMA.COMMAND_SELECT_ACTIVE_QUEST = "EMASelectActiveQuest"
 EMA.COMMAND_SELECT_AVAILABLE_QUEST = "EMASelectAvailableQuest"
 EMA.COMMAND_ACCEPT_QUEST = "EMAAcceptQuest"
@@ -259,9 +257,8 @@ function EMA:OnEnable()
 	EMA:RegisterEvent( "CHAT_MSG_SYSTEM", "QUEST_FAIL" )
    -- Quest post hooks.
 	EMA:SecureHook( C_GossipInfo, "SelectOption", "SelectGossipOption")
-	EMA:SecureHook( C_GossipInfo, "SelectOptionByIndex", "SelectGossipOptionIndex")
+	--EMA:SecureHook( "SelectOption", "SelectGossipOption")
 	EMA:SecureHook( C_GossipInfo, "SelectActiveQuest" )
-	EMA:SecureHook( C_GossipInfo, "CloseGossip" )
 	EMA:SecureHook( "SelectActiveQuest" ) -- Seems bfa uses the old API?
 	EMA:SecureHook( C_GossipInfo, "SelectAvailableQuest" )
 	EMA:SecureHook( "SelectAvailableQuest" ) -- Seems bfa uses the old API?
@@ -275,21 +272,13 @@ function EMA:OnEnable()
 	EMA:SecureHook( "ShowQuestComplete" )
 	EMA:SecureHook( "QuestMapQuestOptions_AbandonQuest" )
 	EMA:SecureHook( "QuestMapQuestOptions_TrackQuest" )
+	
 end
-
-
-
 
 -- Called when the addon is disabled.
 function EMA:OnDisable()
 	-- AceHook-3.0 will tidy up the hooks for us. 
 end
-
-function EMA:GOSSIP_SHOW(event, ...)
-	EMA:Print("test", event)
-
-end
-
 
 -------------------------------------------------------------------------------------------------------------
 -- Settings Dialogs.
@@ -1218,32 +1207,12 @@ function EMA:QUEST_PROGRESS()
 end
 
 function EMA:SelectGossipOption( gossipIndex )
-	--EMA:Print("SelectGossipOption", gossipIndex)
+	--EMA:Print("test", gossipIndex)
 	if EMA.db.mirrorMasterQuestSelectionAndDeclining == true then
 		if EMA.isInternalCommand == false then
             EMA:DebugMessage( "SelectGossipOption" )
 			EMA:EMASendCommandToTeam( EMA.COMMAND_SELECT_GOSSIP_OPTION, gossipIndex )
 		end
-	end		
-end
-
-function EMA:SelectGossipOptionIndex( gossipIndex )
-	--EMA:Print("SelectGossipOptionIndex", gossipIndex)
-	if EMA.db.mirrorMasterQuestSelectionAndDeclining == true then
-		if EMA.isInternalCommand == false then
-            EMA:DebugMessage( "SelectGossipOption" )
-			EMA:EMASendCommandToTeam( EMA.COMMAND_SELECT_GOSSIP_OPTION_INDEX, gossipIndex )
-		end
-	end		
-end
-
-function EMA:DoSelectGossipOptionIndex( sender, gossipIndex )
-	--EMA:Print("DoSelectGossipOptionIndex", gossipIndex)
-	if EMA.db.mirrorMasterQuestSelectionAndDeclining == true then
-		EMA.isInternalCommand = true
-        EMA:DebugMessage( "DoSelectGossipOption" )
-		C_GossipInfo.SelectOptionByIndex( gossipIndex )
-		EMA.isInternalCommand = false
 	end		
 end
 
@@ -1254,22 +1223,6 @@ function EMA:DoSelectGossipOption( sender, gossipIndex )
 		C_GossipInfo.SelectOption( gossipIndex )
 		EMA.isInternalCommand = false
 	end		
-end
-
-function EMA:CloseGossip()
-	if EMA.db.mirrorMasterQuestSelectionAndDeclining == true then
-		if EMA.isInternalCommand == false then
-			EMA:EMASendCommandToTeam( EMA.COMMAND_CLOSE_GOSSIP )
-		end
-	end	
-end
-
-function EMA:DoCloseGossip()
-	if EMA.db.mirrorMasterQuestSelectionAndDeclining == true then
-		EMA.isInternalCommand = true
-		C_GossipInfo.CloseGossip()
-		EMA.isInternalCommand = false
-	end
 end
 
 function EMA:SelectGossipActiveQuest( gossipIndex )
@@ -1291,7 +1244,7 @@ function EMA:DoSelectGossipActiveQuest( sender, gossipIndex )
 end
 
 function EMA:SelectGossipAvailableQuest( gossipIndex )
-	--EMA:Print("SelectGossipAvailableQuest")
+	--EMA:Print("test")
 	if EMA.db.mirrorMasterQuestSelectionAndDeclining == true then
 		if EMA.isInternalCommand == false then
 			EMA:DebugMessage( "SelectGossipAvailableQuest" )
@@ -1333,7 +1286,7 @@ function EMA:DoSelectActiveQuest( sender, questIndex )
 end
 
 function EMA:SelectAvailableQuest( questIndex )
-	--EMA:Print("SelectAvailableQuest", questIndex)
+	--EMA:Print("test")
 	if EMA.db.mirrorMasterQuestSelectionAndDeclining == true then	
 		if EMA.isInternalCommand == false then
 			EMA:DebugMessage( "SelectAvailableQuest" )
@@ -1790,9 +1743,7 @@ function EMA:EMADoQuest_TrackQuest(questID, questLogIndex)
 	--EMA:Print("test", questID, questLogIndex )
 	if ( not QuestUtils_IsQuestWatched(questID) ) then	
 		C_QuestLog.AddQuestWatch(questID, Enum.QuestWatchType.Manual)
-		--QuestSuperTracking_OnQuestTracked(questID)
-		--C_QuestLog.AddQuestWatch(questID)
-			
+		QuestSuperTracking_OnQuestTracked(questID)
 	end
 end
 
@@ -1800,9 +1751,7 @@ end
 function EMA:EMADoQuest_UnTrackQuest(questID, questLogIndex)
 	--EMA:Print("test2", questID, questLogIndex )
 	if ( QuestUtils_IsQuestWatched(questID) ) then
-		--QuestObjectiveTracker_UntrackQuest(nil, questID)
-		--QuestObjectiveTrackerMixin_UntrackQuest(nil, questID)
-		C_QuestLog.RemoveQuestWatch(questID)
+		QuestObjectiveTracker_UntrackQuest(nil, questID)
 	end
 end
 
@@ -2136,12 +2085,6 @@ function EMA:EMAOnCommandReceived( characterName, commandName, ... )
 	end			
 	if commandName == EMA.COMMAND_SELECT_GOSSIP_OPTION then		
 		EMA:DoSelectGossipOption( characterName, ... )
-	end
-	if commandName == EMA.COMMAND_SELECT_GOSSIP_OPTION_INDEX then		
-		EMA:DoSelectGossipOptionIndex( characterName, ... )
-	end	
-	if commandName == EMA.COMMAND_CLOSE_GOSSIP then
-		EMA:DoCloseGossip( characterName, ...)
 	end
 	if commandName == EMA.COMMAND_SELECT_GOSSIP_ACTIVE_QUEST then		
 		EMA:DoSelectGossipActiveQuest( characterName, ... )

@@ -2,13 +2,19 @@
 --				EMA - ( Ebony's MultiBoxing Assistant )    							--
 --				Current Author: Jennifer Cally (Ebony)								--
 --																					--
---				License: All Rights Reserved 2018-2025 Jennifer Cally					--
+--				License: All Rights Reserved 2018-2022 Jennifer Calladine					--
 --																					--
 --				Some Code Used from "Jamba" that is 								--
 --				Released under the MIT License 										--
 --				"Jamba" Copyright 2008-2015  Michael "Jafula" Miller				--
 --																					--
 -- ================================================================================ --
+
+-- DO NOT lOAD over WOLTK.
+local _, _, _, tocversion = GetBuildInfo()
+if tocversion >= 30000 then
+	return
+end	
 
 -- Create the addon using AceAddon-3.0 and embed some libraries.
 local EMA = LibStub( "AceAddon-3.0" ):NewAddon( 
@@ -33,20 +39,20 @@ EMA.moduleDisplayName = L["FOLLOW"]
 -- Icon 
 EMA.moduleIcon = "Interface\\Addons\\EMA\\Media\\FollowIcon.tga"
 -- order
-EMA.moduleOrder = 50
+EMA.moduleOrder = 20
 
 -- EMA key bindings.
-
-BINDING_HEADER_F0LLOW = L["FOLLOW_BINDING_HEADER"]
+BINDING_HEADER_FOLLOW = L["FOLLOW_BINDING_HEADER"]
 BINDING_NAME_FOLLOWME = L["FOLLOW_ME"]
 BINDING_NAME_FOLLOWSTROBEME = L["FOLLOW_STROBE_ME"]
 BINDING_NAME_FOLLOWSTROBEOFF = L["FOLLOW_STROBE_OFF"]
 BINDING_NAME_FOLLOWTEAIN = L["FOLLOW_TRAIN"]
+BINDING_NAME_FOLLOWSTOP = L["FOLLOW_STOP"]
 
 -- Settings - the values to store and their defaults for the settings database.
 EMA.settings = {
 	profile = {
-		warnWhenFollowBreaks = true, 
+		warnWhenFollowBreaks = false, 
 		followBrokenMessage = L["FOLLOW_BROKEN_MSG"],
 		autoFollowAfterCombat = false,  
 		useAfterCombatDelay = false,
@@ -60,13 +66,13 @@ EMA.settings = {
 		strobePauseInCombat = false,
 		strobePauseIfDrinking = false,
 		strobePauseIfInVehicle = false,
+		strobePauseIfDead = false,
 		strobePauseTag = EMAApi.AllTag(),
 		warningArea = EMAApi.DefaultWarningArea(),
 		followMaster = "",
 		useFollowMaster = false,
 		overrideStrobeTargetWithMaster = false,
 		onlyWarnIfOutOfFollowRange = false,
-		
 	},
 }
 
@@ -173,7 +179,15 @@ function EMA:GetConfiguration()
 				usage = "/ema-follow snw",
 				get = false,
 				set = "SuppressNextFollowWarningCommand",
-			},								
+			},
+			stop = {
+				type = "input",
+				name = L["FOLLOW_STOP"],
+				desc = L["FOLLOW_STOP_HELP"],
+				usage = "/ema-follow stop <group>",
+				get = false,
+				set = "CommandFollowStop",
+			},				
 		},
 	}
 	return configuration
@@ -194,6 +208,7 @@ EMA.COMMAND_FOLLOW_STROBE_OFF = "FollowStrobeOff"
 EMA.COMMAND_SET_FOLLOW_MASTER = "FollowMaster"
 EMA.COMMAND_FOLLOW_TRAIN = "FollowTrain"
 EMA.COMMAND_FOLLOW_ME = "FollowMe"
+EMA.COMMAND_FOLLOW_STOP = "FollowStop"
 
 -------------------------------------------------------------------------------------------------------------
 -- Messages module sends.
@@ -419,13 +434,23 @@ local function SettingsCreateDisplayOptions( top )
 		EMA.SettingsTogglePauseDrinking
 	)		
 	movingTop = movingTop - checkBoxHeight
-	EMA.settingsControl.checkBoxPauseIfInVehicle = EMAHelperSettings:CreateCheckBox( 
+	if EMAPrivate.Core.isEmaClassicBccBuild() == false then
+		EMA.settingsControl.checkBoxPauseIfInVehicle = EMAHelperSettings:CreateCheckBox( 
+			EMA.settingsControl, 
+			halfWidth, 
+			left, 
+			movingTop, 
+			L["IN_A_VEHICLE"],
+			EMA.SettingsTogglePauseIfInVehicle
+		)
+	end	
+	EMA.settingsControl.checkBoxPauseIfDead = EMAHelperSettings:CreateCheckBox( 
 		EMA.settingsControl, 
 		halfWidth, 
-		left, 
+		column2left, 
 		movingTop, 
-		L["IN_A_VEHICLE"],
-		EMA.SettingsTogglePauseIfInVehicle
+		L["PLAYER_DEAD"],
+		EMA.SettingsTogglePauseIfDead
 	)	
 	movingTop = movingTop - checkBoxHeight
 	EMA.settingsControl.editBoxFollowStrobePauseTag = EMAHelperSettings:CreateEditBox( EMA.settingsControl,
@@ -502,7 +527,10 @@ function EMA:SettingsRefresh()
 	EMA.settingsControl.checkBoxOverrideStrobeTargetWithMaster:SetValue( EMA.db.overrideStrobeTargetWithMaster )
 	EMA.settingsControl.checkBoxPauseInCombat:SetValue( EMA.db.strobePauseInCombat )
 	EMA.settingsControl.checkBoxPauseDrinking:SetValue( EMA.db.strobePauseIfDrinking )
-	EMA.settingsControl.checkBoxPauseIfInVehicle:SetValue( EMA.db.strobePauseIfInVehicle )
+	if EMAPrivate.Core.isEmaClassicBccBuild() == false then
+		EMA.settingsControl.checkBoxPauseIfInVehicle:SetValue( EMA.db.strobePauseIfInVehicle )
+	end
+	EMA.settingsControl.checkBoxPauseIfDead:SetValue( EMA.db.strobePauseIfDead )
 	EMA.settingsControl.editBoxFollowStrobePauseTag:SetText( EMA.db.strobePauseTag )
 	EMA.settingsControl.editBoxFollowStrobeDelaySeconds:SetText( EMA.db.strobeFrequencySeconds )
 	EMA.settingsControl.editBoxFollowStrobeDelaySecondsInCombat:SetText( EMA.db.strobeFrequencySecondsInCombat )
@@ -602,6 +630,11 @@ function EMA:SettingsTogglePauseIfInVehicle( event, checked )
 	EMA:SettingsRefresh()
 end
 
+function EMA:SettingsTogglePauseIfDead( event, checked )
+	EMA.db.strobePauseIfDead = checked
+	EMA:SettingsRefresh()
+end
+
 function EMA:EditBoxChangedFollowStrobePauseTag( event, text )
 	EMA.db.strobePauseTag = text
 	EMA:SettingsRefresh()
@@ -638,32 +671,39 @@ function EMA:UPDATE_BINDINGS()
 	ClearOverrideBindings( EMA.keyBindingFrame )
 	local key1, key2 = GetBindingKey( "FOLLOWME" )		
 	if key1 then 
-		SetOverrideBindingClick( EMA.keyBindingFrame, false, key1, "EMAFollowSecureButtonFollowMe" ) 
+		SetOverrideBindingClick( EMA.keyBindingFrame, false, key1, "EMAFollowMe" ) 
 	end
 	if key2 then 
-		SetOverrideBindingClick( EMA.keyBindingFrame, false, key2, "EMAFollowSecureButtonFollowMe" ) 
+		SetOverrideBindingClick( EMA.keyBindingFrame, false, key2, "EMAFollowMe" ) 
 	end	
 	local key1, key2 = GetBindingKey( "FOLLOWSTROBEME" )		
 	if key1 then 
-		SetOverrideBindingClick( EMA.keyBindingFrame, false, key1, "EMAFollowSecureButtonFollowStrobeMe" ) 
+		SetOverrideBindingClick( EMA.keyBindingFrame, false, key1, "EMAFollowStrobeMe" ) 
 	end
 	if key2 then 
-		SetOverrideBindingClick( EMA.keyBindingFrame, false, key2, "EMAFollowSecureButtonFollowStrobeMe" ) 
+		SetOverrideBindingClick( EMA.keyBindingFrame, false, key2, "EMAFollowStrobeMe" ) 
 	end
 	local key1, key2 = GetBindingKey( "FOLLOWSTROBEOFF" )		
 	if key1 then 
-		SetOverrideBindingClick( EMA.keyBindingFrame, false, key1, "EMAFollowSecureButtonFollowStrobeOff" ) 
+		SetOverrideBindingClick( EMA.keyBindingFrame, false, key1, "EMAFollowStrobeOff" ) 
 	end
 	if key2 then 
-		SetOverrideBindingClick( EMA.keyBindingFrame, false, key2, "EMAFollowSecureButtonFollowStrobeOff" ) 
+		SetOverrideBindingClick( EMA.keyBindingFrame, false, key2, "EMAFollowStrobeOff" ) 
 	end
 	local key1, key2 = GetBindingKey( "FOLLOWTEAIN" )		
 	if key1 then 
-		SetOverrideBindingClick( EMA.keyBindingFrame, false, key1, "EMAFollowSecureButtonFollowTrain" ) 
+		SetOverrideBindingClick( EMA.keyBindingFrame, false, key1, "EMAFollowTrain" ) 
 	end
 	if key2 then 
-		SetOverrideBindingClick( EMA.keyBindingFrame, false, key2, "EMAFollowSecureButtonFollowTrain" ) 
+		SetOverrideBindingClick( EMA.keyBindingFrame, false, key2, "EMAFollowTrain" ) 
 	end
+	local key1, key2 = GetBindingKey( "FOLLOWSTOP" )		
+	if key1 then 
+		SetOverrideBindingClick( EMA.keyBindingFrame, false, key1, "EMAFollowStop" ) 
+	end
+	if key2 then 
+		SetOverrideBindingClick( EMA.keyBindingFrame, false, key2, "EMAFollowStop" ) 
+	end	
 end
 
 -------------------------------------------------------------------------------------------------------------
@@ -674,6 +714,7 @@ end
 function EMA:OnInitialize()
 	EMA.EMAExternalNoWarnNextBreak = false
 	EMA.EMAExternalNoWarnNextSecondBreak = false	
+	-- build change moving follow to toon
 	-- An empty team list.
 	EMA.teamList = {}
 	-- Create the settings control.
@@ -701,35 +742,42 @@ function EMA:OnInitialize()
 	-- Character on taxi flag.
 	EMA.characterIsOnTaxi = false
 -- Key bindings.
-	EMAFollowSecureButtonFollowMe = CreateFrame( "CheckButton", "EMAFollowSecureButtonFollowMe", nil, "SecureActionButtonTemplate" )
-	EMAFollowSecureButtonFollowMe:SetAttribute( "type", "macro" )
-	EMAFollowSecureButtonFollowMe:SetAttribute( "macrotext", "/ema-follow me all" )
-	EMAFollowSecureButtonFollowMe:Hide()
-	EMAFollowSecureButtonStrobeMe = CreateFrame( "CheckButton", "EMAFollowSecureButtonFollowStrobeMe", nil, "SecureActionButtonTemplate" )
-	EMAFollowSecureButtonStrobeMe:SetAttribute( "type", "macro" )
-	EMAFollowSecureButtonStrobeMe:SetAttribute( "macrotext", "/ema-follow strobeonme all" )
-	EMAFollowSecureButtonStrobeMe:Hide()
-	EMAFollowSecureButtonFollowStrobeOff = CreateFrame( "CheckButton", "EMAFollowSecureButtonFollowStrobeOff", nil, "SecureActionButtonTemplate" )
-	EMAFollowSecureButtonFollowStrobeOff:SetAttribute( "type", "macro" )
-	EMAFollowSecureButtonFollowStrobeOff:SetAttribute( "macrotext", "/ema-follow strobeoff all" )
-	EMAFollowSecureButtonFollowStrobeOff:Hide()
-	EMAFollowSecureButtonFollowTrain = CreateFrame( "CheckButton", "EMAFollowSecureButtonFollowTrain", nil, "SecureActionButtonTemplate" )
-	EMAFollowSecureButtonFollowTrain:SetAttribute( "type", "macro" )
-	EMAFollowSecureButtonFollowTrain:SetAttribute( "macrotext", "/ema-follow train all" )
-	EMAFollowSecureButtonFollowTrain:Hide()
+	EMAFollowMe = CreateFrame( "CheckButton", "EMAFollowMe", nil, "SecureActionButtonTemplate" )
+	EMAFollowMe:SetAttribute( "type", "macro" )
+	EMAFollowMe:SetAttribute( "macrotext", "/ema-follow me all" )
+	EMAFollowMe:Hide()
+	EMAFollowStrobeMe = CreateFrame( "CheckButton", "EMAFollowStrobeMe", nil, "SecureActionButtonTemplate" )
+	EMAFollowStrobeMe:SetAttribute( "type", "macro" )
+	EMAFollowStrobeMe:SetAttribute( "macrotext", "/ema-follow strobeonme all" )
+	EMAFollowStrobeMe:Hide()
+	EMAFollowStrobeOff = CreateFrame( "CheckButton", "EMAFollowStrobeOff", nil, "SecureActionButtonTemplate" )
+	EMAFollowStrobeOff:SetAttribute( "type", "macro" )
+	EMAFollowStrobeOff:SetAttribute( "macrotext", "/ema-follow strobeoff all" )
+	EMAFollowStrobeOff:Hide()
+	EMAFollowTrain = CreateFrame( "CheckButton", "EMAFollowTrain", nil, "SecureActionButtonTemplate" )
+	EMAFollowTrain:SetAttribute( "type", "macro" )
+	EMAFollowTrain:SetAttribute( "macrotext", "/ema-follow train all" )
+	EMAFollowTrain:Hide()
+	EMAFollowStop = CreateFrame( "CheckButton", "EMAFollowStop", nil, "SecureActionButtonTemplate" )
+	EMAFollowStop:SetAttribute( "type", "macro" )
+	EMAFollowStop:SetAttribute( "macrotext", "/ema-follow stop all" )
+	EMAFollowStop:Hide()
 end
 
 -- Called when the addon is enabled.
 function EMA:OnEnable()
+	EMA.db.warnWhenFollowBreaks = false	
 	-- WoW events.
 	EMA:RegisterEvent( "AUTOFOLLOW_BEGIN" )
 	EMA:RegisterEvent( "AUTOFOLLOW_END" )
 	EMA:RegisterEvent( "PLAYER_REGEN_DISABLED" )
 	EMA:RegisterEvent( "PLAYER_REGEN_ENABLED" )	
 	EMA:RegisterEvent( "PLAYER_CONTROL_GAINED" )
-	EMA:RegisterEvent( "UNIT_ENTERING_VEHICLE" )
-	EMA:RegisterEvent( "UNIT_EXITING_VEHICLE" )
-	EMA:RegisterEvent( "UI_ERROR_MESSAGE", "PVP_FOLLOW" )
+	if EMAPrivate.Core.isEmaClassicBccBuild() == false then
+		EMA:RegisterEvent( "UNIT_ENTERING_VEHICLE" )
+		EMA:RegisterEvent( "UNIT_EXITING_VEHICLE" )
+		EMA:RegisterEvent( "UI_ERROR_MESSAGE", "PVP_FOLLOW" )
+	end
 	-- Initialise key bindings.
 	EMA.keyBindingFrame = CreateFrame( "Frame", nil, UIParent )
 	EMA:RegisterEvent( "UPDATE_BINDINGS" )		
@@ -763,6 +811,7 @@ function EMA:EMAOnSettingsReceived( characterName, settings )
 		EMA.db.warnFollowPvP = settings.warnFollowPvP
 		EMA.db.strobePauseInCombat = settings.strobePauseInCombat
 		EMA.db.strobePauseIfInVehicle = settings.strobePauseIfInVehicle
+		EMA.db.strobePauseIfDead = settings.strobePauseIfDead
 		EMA.db.strobePauseIfDrinking = settings.strobePauseIfDrinking
 		EMA.db.strobePauseTag = settings.strobePauseTag
 		EMA.db.doNotWarnFollowStrobing = settings.doNotWarnFollowStrobing
@@ -857,6 +906,7 @@ end
 
 function EMA:SuppressNextFollowWarning()
 	-- Events are fired as follows for a /follow command.
+	--EMA:Print("testfollow", EMA.isFollowing)
 	if EMA.isFollowing == true then
 		EMA:SetNoFollowBrokenWarningNextBreak()
 		EMA:SetNoFollowBrokenWarningNextSecondBreak()
@@ -904,19 +954,21 @@ function EMA:AutoFollowEndSend()
 	end
 	-- Do not warn if on Taxi
 	if UnitOnTaxi("player") == true then
-		--EMA:Print("taxi")
-		canWarn = false
+			--EMA:Print("taxi")
+			canWarn = false
 	end	
 	--Do not warn if in combat?
 	if EMA.db.doNotWarnFollowBreakInCombat == true and EMA.outOfCombat == false then
 		--EMA:Print("Do Not warn in comabt")
 		canWarn = false
 	end
-	--Do not warn if a passenger in a vehicle.
-	if UnitInVehicle("Player") == true and UnitControllingVehicle("player") == false then
-		--EMA:Print("UnitInVehicle")
-		canWarn = false
-	end
+	--Do not warn if a passenger in a vehicle. -- not in classic or bc
+	if EMAPrivate.Core.isEmaClassicBccBuild() == false then	
+		if UnitInVehicle("Player") == true and UnitControllingVehicle("player") == false then
+			--EMA:Print("UnitInVehicle")
+			canWarn = false
+		end
+	end	
 	-- Do not warn if any other members in combat?
 	if EMA.db.doNotWarnFollowBreakMembersInCombat == true and EMA:AreTeamMembersInCombat() == true or UnitAffectingCombat("player") == true then
 		--EMA:Print("doNotWarnFollowBreakMembersInCombat")
@@ -936,6 +988,11 @@ function EMA:AutoFollowEndSend()
 			canWarn = false
 		end
 	end	
+	if EMA.EMAExternalNoWarnNextBreak == true then
+		--EMA:Print("test", EMA.EMAExternalNoWarnNextBreak )
+		canWarn = false		
+		EMA.EMAExternalNoWarnNextBreak = false
+	end
 	-- If allowed to warn, then warn.
 	if canWarn == true then
 		EMA:EMASendMessageToTeam( EMA.db.warningArea, EMA.db.followBrokenMessage, false )
@@ -990,7 +1047,7 @@ end
 
 function EMA:PVP_FOLLOW(event, arg1, message, ...  )
 	--EMA:Print("test", message, EMA.warnFollowPvPCombat )
-	if EMA.db.warnFollowPvP == false and EMA.db.warnWhenFollowBreaks == false then
+	if EMA.db.warnFollowPvP == false and EMA.db.warnWhenFollowBreaks == false and EMAPrivate.Core.isEmaClassicBccBuild() == true then
 		return
 	end
 	if message == ERR_INVALID_FOLLOW_TARGET_PVP_COMBAT or message == ERR_INVALID_FOLLOW_PVP_COMBAT then
@@ -1107,13 +1164,15 @@ end
 function EMA:CommandFollowMe( info, parameters )
 	local tag = parameters
 	if tag ~= nil and tag:trim() ~= "" then 
+		EMA.SuppressNextFollowWarning()
 		EMA:EMASendCommandToTeam( EMA.COMMAND_FOLLOW_ME, tag )
 	end
 end
 
 function EMA:ReceiveCommandFollowMe( characterName, tag )
-	--EMA:Print("testfollowme", characterName, tag ) 
-	if EMAApi.DoesCharacterHaveTag( EMA.characterName, tag ) then
+	--EMA:Print("testfollowme", characterName, tag )
+	if EMAApi.DoesCharacterHaveTag( EMA.characterName, tag ) and characterName ~= EMA.characterName then
+		--EMA:Print("works")
 		FollowUnit( Ambiguate( characterName, "none" ), true )	
 	end
 end
@@ -1278,6 +1337,12 @@ function EMA:FollowTarget( target )
 			end
 		end
 	end
+	if EMA.followingStrobing == true and EMA.db.strobePauseIfDead == true then
+		local isDeadOrGhost = UnitIsDeadOrGhost("player")
+		if isDeadOrGhost == true then 
+			canFollowTarget = false
+		end	
+	end	
 	-- If follow strobing and strobing paused.
 	if EMA.followingStrobing == true and EMA.followingStrobingPaused == true then
 		-- Follow strobing is paused, do not follow target.
@@ -1342,6 +1407,20 @@ function EMA:FollowStrobingPause( pause )
 	end	
 end
 
+function EMA:CommandFollowStop( info, parameters )
+	local tag = parameters
+	if tag ~= nil and tag:trim() ~= "" then 
+		EMA:EMASendCommandToTeam( EMA.COMMAND_FOLLOW_STOP, tag )
+	end
+end
+
+function EMA:ReceiveCommandFollowStop( characterName, tag )
+	--EMA:Print("testfollowStop", characterName, tag ) 
+	if EMAApi.DoesCharacterHaveTag( EMA.characterName, tag ) and characterName ~= EMA.characterName then
+		FollowUnit( "player" )
+	end
+end
+
 -- A EMA command has been recieved.
 function EMA:EMAOnCommandReceived( characterName, commandName, ... )
 	if commandName == EMA.COMMAND_FOLLOW_TARGET then
@@ -1362,8 +1441,11 @@ function EMA:EMAOnCommandReceived( characterName, commandName, ... )
 	if commandName == EMA.COMMAND_FOLLOW_TRAIN then
 		EMA:ReceiveCommandFollowTrain( ... )
 	end
-	if commandName == EMA.COMMAND_FOLLOW_ME then
+	if commandName == EMA.COMMAND_FOLLOW_ME then 
 		EMA:ReceiveCommandFollowMe( characterName, ... )
+	end
+	if commandName == EMA.COMMAND_FOLLOW_STOP then
+		EMA:ReceiveCommandFollowStop( characterName, ... )
 	end
 end
 

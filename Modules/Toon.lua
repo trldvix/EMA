@@ -1,8 +1,8 @@
 -- ================================================================================ --
 --				EMA - ( Ebony's MultiBoxing Assistant )    							--
---				Current Author: Jennifer Calladine (Ebony)								--
+--				Current Author: Jennifer Cally (Ebony)								--
 --																					--
---				License: All Rights Reserved 2018-2025 Jennifer Cally					--
+--				License: All Rights Reserved 2018-2022 Jennifer Calladine					--
 --																					--
 --				Some Code Used from "Jamba" that is 								--
 --				Released under the MIT License 										--
@@ -98,6 +98,7 @@ EMA.settings = {
 		acceptReadyCheck = false,
 		teleportLFGWithTeam = false,
 		rollWithTeam = false,
+		toggleWarMode = false,
 		autoAcceptPartySyncRequest = false,
 		autoAcceptPartySyncRequestFromTeam = false,
 		setViewWithoutMaster = true,
@@ -158,7 +159,7 @@ EMA.COMMAND_SOUL_STONE = "EMAToonSoulStone"
 EMA.COMMAND_READY_CHECK = "EMAReadyCheck"
 EMA.COMMAND_TELE_PORT = "EMAteleport"
 EMA.COMMAND_LOOT_ROLL = "EMALootRoll"
-EMA.COMMAND_CLOSE_MERCHANT_FRAME = "closeMerchantFrame"
+EMA.COMMAND_WAR_MODE = "EMAWarMode"
 EMA.COMMAND_SET_VIEW = "EMASetViewPoint"
 EMA.COMMAND_TRAIT_CHANGE = "EMATraitChange"
 
@@ -321,6 +322,16 @@ local function SettingsCreateToon( top )
 		L["SUMMON_REQUEST_HELP"]
 	)
 	if EMAPrivate.Core.isEmaClassicBccBuild() == false then
+		movingTop = movingTop - checkBoxHeight
+		EMA.settingsControlToon.checkBoxToggleWarMode = EMAHelperSettings:CreateCheckBox( 
+			EMA.settingsControlToon, 
+			halfWidth, 
+			left, 
+			movingTop, 
+			L["WAR_MODE"],
+			EMA.SettingsToggleWarMode,
+			L["WAR_MODE_HELP"]
+		)	
 		movingTop = movingTop - checkBoxHeight
 		EMA.settingsControlToon.checkBoxTogglePartySyncRequest = EMAHelperSettings:CreateCheckBox( 
 			EMA.settingsControlToon, 
@@ -821,6 +832,7 @@ function EMA:SettingsRefresh()
 	EMA.settingsControlToon.checkBoxAcceptReadyCheck:SetValue( EMA.db.acceptReadyCheck )
 	EMA.settingsControlToon.checkBoxLootWithTeam:SetValue( EMA.db.rollWithTeam )
 	if EMAPrivate.Core.isEmaClassicBccBuild() == false then
+		EMA.settingsControlToon.checkBoxToggleWarMode:SetValue( EMA.db.toggleWarMode )
 		EMA.settingsControlToon.checkBoxLFGTeleport:SetValue( EMA.db.teleportLFGWithTeam )
 		EMA.settingsControlToon.checkBoxAutoRoleCheck:SetValue( EMA.db.autoAcceptRoleCheck )
 		EMA.settingsControlToon.checkBoxAutoRoleCheckWithTeam:SetValue( EMA.db.autoAcceptRoleCheckWithTeam )
@@ -924,6 +936,11 @@ function EMA:SettingsToggleLootWithTeam( event, checked )
 	EMA.db.rollWithTeam = checked
 	EMA:SettingsRefresh()
 end
+
+function EMA:SettingsToggleWarMode(event, checked )
+	EMA.db.toggleWarMode = checked
+	EMA:SettingsRefresh()
+end	
 
 function EMA:SettingsTogglePartySyncRequest(event, checked )
 	EMA.db.autoAcceptPartySyncRequest = checked
@@ -1196,9 +1213,10 @@ function EMA:OnEnable()
 	EMA:SecureHook( "ConfirmReadyCheck" )
 	if EMAPrivate.Core.isEmaClassicBccBuild() == false then
 		EMA:SecureHook( "LFGTeleport" )
+		-- WarMode Hooking off the toggle then the event!!
+		EMA:SecureHook( C_PvP, "ToggleWarMode", "ToogleWarMode")
 	end
 	EMA:SecureHook( "RollOnLoot" )
-	EMA:SecureHook( "CloseMerchant" )
 end
 
 -- Called when the addon is disabled.
@@ -1247,6 +1265,7 @@ function EMA:EMAOnSettingsReceived( characterName, settings )
 		EMA.db.acceptReadyCheck = settings.acceptReadyCheck
 		EMA.db.teleportLFGWithTeam = settings.teleportLFGWithTeam
 		EMA.db.rollWithTeam = settings.rollWithTeam
+		EMA.db.toggleWarMode = settings.toggleWarMode
 		EMA.db.setView = settings.setView
 		EMA.db.setViewWithoutMaster = settings.setViewWithoutMaster
 		EMA.db.autoAcceptPartySyncRequest = settings.autoAcceptPartySyncRequest
@@ -1660,7 +1679,7 @@ function EMA:READY_CHECK( event, name, ... )
 		--EMA:Print("readyCheck", name )
 		for index, characterName in EMAApi.TeamListOrderedOnline() do
 			if name == Ambiguate( characterName, "none") then
-				EMA.isInternalCommand = true
+				EMA.isInternalCommand = ture
 				--EMA:Print("found in team", characterName)
 				if ReadyCheckFrame:IsShown() == true then
 					--EMA:Print("Ok?")
@@ -1761,23 +1780,6 @@ function EMA:DoLootRoll( id, rollType, name )
 	EMA.isInternalCommand = false
 end
 
-function EMA:CloseMerchant()
-	--EMA:Print("CloseMerchant")
-	if IsShiftKeyDown() == false then
-		if EMA.isInternalCommand == false then
-			EMA:EMASendCommandToTeam( EMA.COMMAND_CLOSE_MERCHANT_FRAME)
-		end		
-	end
-end
-
-function EMA:DoCloseMerchant()
-	--EMA:Print("DoCloseMerchant)
-	EMA.isInternalCommand = true
-		CloseMerchant()
-	EMA.isInternalCommand = false
-end
-
-
 function EMA:CONFIRM_SUMMON( event, sender, location, ... )
 	local sender, location = C_SummonInfo.GetSummonConfirmSummoner(), C_SummonInfo.GetSummonConfirmAreaName()
 	if EMA.db.autoAcceptSummonRequest == true then
@@ -1788,6 +1790,39 @@ function EMA:CONFIRM_SUMMON( event, sender, location, ... )
 		end
 	end
 end
+
+function EMA:ToogleWarMode()
+	--EMA:Print("testTimer")
+	--Ebony, Data from C_PvP.IsWarModeDesired is not updated in hook so added a small timmer to get right infomation
+	EMA:ScheduleTimer("WarMode", 0.5 )
+end	
+
+function EMA:WarMode()
+	if EMA.db.toggleWarMode == true and EMAPrivate.Core.isEmaClassicBccBuild() == false then
+		--EMA:Print("WarModeInternal", EMA.isInternalCommand )
+		if C_PvP.IsWarModeFeatureEnabled() == true then
+			local isWarMode = C_PvP.IsWarModeDesired()
+			if C_PvP.CanToggleWarMode(isWarMode) == true then
+				if EMA.isInternalCommand == false then	
+					--EMA:Print("SendWarMode", isWarMode )
+					EMA:EMASendCommandToTeam( EMA.COMMAND_WAR_MODE, isWarMode )
+				end	
+			end	
+		end
+	end	
+end
+
+function EMA:DoWarMode( isWarMode )
+	--EMA:Print("test", isWarMode )
+	if EMAPrivate.Core.isEmaClassicBccBuild() == true then 
+		return 
+	end
+	EMA.isInternalCommand = true
+	if C_PvP.CanToggleWarMode( isWarMode ) == true and isWarMode ~= nil then
+		C_PvP.SetWarModeDesired( isWarMode )
+	end
+	EMA.isInternalCommand = false
+end	
 
 function EMA:MERCHANT_SHOW( event, ... )	
 	-- Does the user want to auto repair?
@@ -2006,11 +2041,10 @@ function EMA:LOSS_OF_CONTROL_ADDED( event, ... )
 		if eventIndex > 0 then
 			local LossOfControlData = C_LossOfControl.GetActiveLossOfControlData(eventIndex)
 			--local locType, spellID, text, iconTexture, startTime, timeRemaining, duration, lockoutSchool, priority, displayType	
-			--local name, rank, icon, castTime, minRange, maxRange, spellId =  GetSpellInfo( LossOfControlData.spellID )
-			local spellInfo = C_Spell.GetSpellInfo( LossOfControlData.spellID )
-			--EMA:Print("test", LossOfControlData.spellID, spellInfo.name )
-			if EMAApi.IsCharacterTheMaster( EMA.characterName ) == false and spellInfo.name ~= nil then
-				EMA:EMASendMessageToTeam( EMA.db.warningArea, EMA.db.CcMessage..L[" "].. spellInfo.name, false )
+			local name, rank, icon, castTime, minRange, maxRange, spellId =  GetSpellInfo( LossOfControlData.spellID )
+			--EMA:Print("test", LossOfControlData.spellID, name )
+			if EMAApi.IsCharacterTheMaster( EMA.characterName ) == false and name ~= nil then
+				EMA:EMASendMessageToTeam( EMA.db.warningArea, EMA.db.CcMessage..L[" "].. name, false )
 			end
 		end
 	end
@@ -2113,9 +2147,9 @@ function EMA:EMAOnCommandReceived( characterName, commandName, ... )
 			EMA.DoLootRoll( characterName, ... )
 		end	
 	end
-	if commandName == EMA.COMMAND_CLOSE_MERCHANT_FRAME then
+	if commandName == EMA.COMMAND_WAR_MODE then
 		if characterName ~= self.characterName then
-			EMA.DoCloseMerchant( characterName, ... )
+			EMA.DoWarMode( characterName, ... )
 		end	
 	end
 	if commandName == EMA.COMMAND_TRAIT_CHANGE then

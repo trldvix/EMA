@@ -1,8 +1,8 @@
 -- ================================================================================ --
 --				EMA - ( Ebony's MultiBoxing Assistant )    							--
---				Current Author: Jennifer Calladine (Ebony)								--
+--				Current Author: Jennifer Cally (Ebony)								--
 --																					--
---				License: All Rights Reserved 2018-2025 Jennifer Cally					--
+--				License: All Rights Reserved 2018-2019 Jennifer Cally					--
 --																					--
 --				Some Code Used from "Jamba" that is 								--
 --				Released under the MIT License 										--
@@ -31,6 +31,9 @@ local EMAHelperSettings = LibStub:GetLibrary( "EMAHelperSettings-1.0" )
 local LibBagUtils = LibStub:GetLibrary( "LibBagUtils-1.0" )
 EMA.SharedMedia = LibStub( "LibSharedMedia-3.0" )
 
+-- Get the container wrappers from Core.
+local GetContainerNumSlots = EMAPrivate.Core.GetContainerNumSlots
+
 --  Constants and Locale for this module.
 EMA.moduleName = "Information"
 EMA.settingsDatabaseName = "InformationProfileDB"
@@ -56,7 +59,6 @@ local function allAlwaysCurrencys()
 		allAlwaysCurrencys.Conquest = 1602
 		allAlwaysCurrencys.TimeWalker = 1166
 		allAlwaysCurrencys.Darkmoon = 515
-		allAlwaysCurrencys.TradersTender = 2032
 	return allAlwaysCurrencys
 end	
 
@@ -145,31 +147,7 @@ local function dragonflightCurrencys()
 		dragonflightCurrencys.EffigyAdornments = 2011
 		dragonflightCurrencys.PurifiedArcaneEnergy = 2105
 		dragonflightCurrencys.BloodyTokens = 2123
-		dragonflightCurrencys.FlightStones = 2245
-		dragonflightCurrencys.EmeraldDewdrop = 2650
-		dragonflightCurrencys.WhelplingsDreamingCrest = 2706
-		dragonflightCurrencys.DrakesDreamingCrest = 2707
-		dragonflightCurrencys.WyrmsDreamingCrest = 2708
-		dragonflightCurrencys.DreamInfusion = 2777
-		dragonflightCurrencys.RenascentDream = 2796
 	return dragonflightCurrencys
-end	
-
-local function thewarwithinCurrencys()
-	local thewarwithinCurrencys = {}
-		thewarwithinCurrencys.NerubarFinery = 3093
-		thewarwithinCurrencys.GildedHarbingerCrest = 2917
-		thewarwithinCurrencys.RunedHarbingerCrest = 2916
-		thewarwithinCurrencys.Valorstones = 3008
-		thewarwithinCurrencys.ResonanceCrystals = 2815
-		thewarwithinCurrencys.Kej = 3056
-		thewarwithinCurrencys.Undercoin = 2803
-		thewarwithinCurrencys.WeatheredHarbingerCrest = 2914
-		thewarwithinCurrencys.CarvedHarbingerCrest = 2915
-		thewarwithinCurrencys.MereldarDerbyMark = 3055
-		thewarwithinCurrencys.RestoredCofferKey = 3028
-		thewarwithinCurrencys.ResidualMemories = 3089
-	return 	thewarwithinCurrencys
 end	
 
 local function testcode()
@@ -222,11 +200,6 @@ function EMA:AddCurrencyToTable()
 			EMA.currTypes[name] = id
 		end
 	end
-	if EMA.db.currTheWarWithin == true then
-		for name, id in pairs( thewarwithinCurrencys() ) do
-			EMA.currTypes[name] = id
-		end
-	end
 end	
 	
 -- Settings - the values to store and their defaults for the settings database.
@@ -242,7 +215,6 @@ EMA.settings = {
 		currBattleforAzerothCurrencys = false,
 		currShadowlands = false,
 		currDragonflight = false,
-		currTheWarwithin = false,
 		-- Currency default's ALL NONE! (saves updating every xpac....)
 		CcurrTypeOne = 1,
 		CcurrTypeOneName = "",
@@ -504,16 +476,6 @@ function EMA:SettingsCreateCurrency( top )
 		EMA.SettingsToggleCurrencyDragonflight,
 		L["CURRENCY_DRAGONFLIGHT_HELP"]
 	)	
-	movingTop = movingTop - checkBoxHeight
-	EMA.settingsControl.checkBoxCurrencyShowTheWarWithin = EMAHelperSettings:CreateCheckBox( 
-		EMA.settingsControl, 
-		thirdWidth, 
-		left, 
-		movingTop, 
-		L["CURRENCY_WAR_WITHIN"],
-		EMA.SettingsToggleCurrencyTheWarWithin,
-		L["CURRENCY_WAR_WITHIN_HELP"]
-	)
 	--Currency One & Two	
 	movingTop = movingTop - checkBoxHeight
 	EMA.settingsControl.editBoxCurrencyTypeOneID = EMAHelperSettings:CreateDropdown( 
@@ -772,7 +734,6 @@ function EMA:SettingsRefresh()
 	EMA.settingsControl.checkBoxCurrencyShowBattleforAzeroth:SetValue( EMA.db.currBattleforAzerothCurrencys) 
 	EMA.settingsControl.checkBoxCurrencyShowShadowlands:SetValue( EMA.db.currShadowlands )
 	EMA.settingsControl.checkBoxCurrencyShowDragonflight:SetValue( EMA.db.currDragonflight )
-	EMA.settingsControl.checkBoxCurrencyShowTheWarWithin:SetValue( EMA.db.currTheWarWithin )	
 	EMA.settingsControl.editBoxCurrencyTypeOneID:SetValue( EMA.db.CcurrTypeOne )
 	EMA.settingsControl.editBoxCurrencyTypeOneID:SetList( EMA.CurrDropDownBox() )
 	EMA.settingsControl.editBoxCurrencyTypeTwoID:SetValue ( EMA.db.CcurrTypeTwo )	
@@ -870,12 +831,6 @@ end
 
 function EMA:SettingsToggleCurrencyDragonflight( event, checked )
 	EMA.db.currDragonflight = checked
-	EMA:AddCurrencyToTable()
-	EMA:SettingsRefresh()
-end
-
-function EMA:SettingsToggleCurrencyTheWarWithin( event, checked )
-	EMA.db.currTheWarWithin = checked
 	EMA:AddCurrencyToTable()
 	EMA:SettingsRefresh()
 end
@@ -1076,7 +1031,6 @@ function EMA:EMAOnSettingsReceived( characterName, settings )
 		EMA.db.currLegionCurrencys = settings.currLegionCurrencys
 		EMA.db.currBattleforAzerothCurrencys = settings.currBattleforAzerothCurrencys
 		EMA.db.currShadowlands = settings.currShadowlands
-		EMA.db.currTheWarWithin = settings.currTheWarWithin
 		EMA.db.CcurrTypeOne = settings.CcurrTypeOne
 		EMA.db.CcurrTypeOneName = settings.CcurrTypeOneName
 		EMA.db.CcurrTypeTwo = settings.CcurrTypeTwo
@@ -2166,7 +2120,7 @@ end
 
 function EMA:LookForKeyStones()
 	for bagID = 0, NUM_BAG_SLOTS do
-		for slotID = 1,GetContainerNumSlots( bagID ),1 do 
+		for slotID = 1, GetContainerNumSlots( bagID ), 1 do 
 			local item = Item:CreateFromBagAndSlot(bagID, slotID)
 			if ( item ) then
 				local bagItemID = item:GetItemID()

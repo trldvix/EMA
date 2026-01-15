@@ -2,7 +2,7 @@
 --				EMA - ( Ebony's MultiBoxing Assistant )    							--
 --				Current Author: Jennifer Cally (Ebony)								--
 --																					--
---				License: All Rights Reserved 2018-2025 Jennifer Cally					--
+--				License: All Rights Reserved 2018-2022 Jennifer Calladine					--
 --																					--
 --				Some Code Used from "Jamba" that is 								--
 --				Released under the MIT License 										--
@@ -477,8 +477,6 @@ L["CURRENCY_SHADOWLANDS"] = "Shadowlands"
 L["CURRENCY_SHADOWLANDS_HELP"] = "Shadowlands Currencies"
 L["CURRENCY_DRAGONFLIGHT"] = "Dragon Flight"
 L["CURRENCY_DRAGONFLIGHT_HELP"] = "Dragon Flight Currencies"
-L["CURRENCY_WAR_WITHIN"] = "The WarWithin"
-L["CURRENCY_WAR_WITHIN_HELP"] = "The WarWithin Currencies"
 L["CURR_STARTUP"] = "Open Currency List On Startup"
 L["CURR_STARTUP_HELP"] = "Open Currency List On Startup On Everyone."
 L["CURR_STARTUP_MASTER"] = "Only On Master"

@@ -2,7 +2,7 @@
 --				EMA - ( Ebony's MultiBoxing Assistant )    							--
 --				Current Author: Jennifer Cally (Ebony)								--
 --																					--
---				License: All Rights Reserved 2018-2025 Jennifer Cally					--
+--				License: All Rights Reserved 2018-2022 Jennifer Calladine					--
 --																					--
 --				Some Code Used from "Jamba" that is 								--
 --				Released under the MIT License 										--
@@ -39,7 +39,7 @@ EMA.moduleIcon = "Interface\\Addons\\EMA\\Media\\NewsIcon.tga"
 EMA.pofileIcon = "Interface\\Addons\\EMA\\Media\\SettingsIcon.tga"
 -- order
 EMA.moduleOrder = 1
-local version =   C_AddOns.GetAddOnMetadata("EMA", "version")
+local version = C_AddOns.GetAddOnMetadata("EMA", "version")
 
 -- Load libraries.
 local AceGUI = LibStub("AceGUI-3.0")
@@ -64,7 +64,7 @@ EMAPrivate.SettingsFrame.Widget:AddChild( EMAPrivate.SettingsFrame.WidgetTree )
 
 
 function EMA:OnEnable()
-	local Jamba = C_AddOns.IsAddOnLoaded("Jamba")
+	local Jamba = IsAddOnLoaded("Jamba")
 	if Jamba == true then
 		StaticPopup_Show( "CAN_NOT_RUN_JAMBA_AND_EMA" )
 	end
@@ -299,7 +299,7 @@ end
 
 --Ema Alpha
 local function isEmaAlphaBuild()
-	local EMAVersion = GetAddOnMetadata("EMA", "version")
+	local EMAVersion = C_AddOns.GetAddOnMetadata("EMA", "version")
 	-- EMA Alpha Build
 	local Alpha = EMAVersion:find( "Alpha" )
 	if Alpha then
@@ -311,8 +311,8 @@ end
 -- WoW 10.0
 local function isEmaBetaBuild()
 	local beta = false
-	local WoW10 = select(4, GetBuildInfo()) >= 100002
-	if WoW10 == true then
+	local version, build, date, tocversion = GetBuildInfo()
+	if tocversion >= 100000 or (C_Container ~= nil) then
 		beta = true
 	end
 	return beta
@@ -322,8 +322,7 @@ end
 local function isEmaClassicBuild()
 	local classic = false
 	-- Classic
-	local classicBuild  = select(4, GetBuildInfo()) <= 11403
-	if 	classicBuild  == true then
+	if _G.WOW_PROJECT_ID == _G.WOW_PROJECT_CLASSIC then
 		classic = true
 	end
 	return 	classic
@@ -331,7 +330,6 @@ end
 
 -- EMA WOTLK Build
 local function isEmaClassicBccBuild()
-	--EMA:Print("t", _G.WOW_PROJECT_ID)
 	local classic = false
 	if _G.WOW_PROJECT_ID == _G.WOW_PROJECT_BURNING_CRUSADE_CLASSIC then
 		classic = true
@@ -343,10 +341,7 @@ local function isEmaClassicBccBuild()
 	if _G.WOW_PROJECT_ID == _G.WOW_PROJECT_WRATH_CLASSIC then
 		classic = true
 	end
-	if _G.WOW_PROJECT_ID == _G.WOW_PROJECT_CATACLYSM_CLASSIC then
-		classic = true
-	end	
- 	return classic
+	return classic
 end	
 
 -------------------------------------------------------------------------------------------------------------
@@ -686,7 +681,6 @@ function EMA:CoreSettingsCreateInfo( top )
 	)
 	
 	movingTop = movingTop - labelHeight * 14
-	--[[
 	if EMAPrivate.Core.isEmaClassicBccBuild() == true then
 		EMA.settingsControl.buttonKeyBindings = EMAHelperSettings:CreateButton( 
 			EMA.settingsControl, 
@@ -697,7 +691,6 @@ function EMA:CoreSettingsCreateInfo( top )
 			EMA.SettingsKeyBindingsCommandClick
 		)	
 	end
-	]]
 	-- Special thanks Heading
 	movingTop = movingTop - buttonHeight * 1
 	EMAHelperSettings:CreateHeading( EMA.settingsControl, L["SPECIAL_THANKS"], movingTop, false )	
@@ -855,8 +848,77 @@ EMAPrivate.Core.SendCommandToMaster = SendCommandToMaster
 EMAPrivate.Core.SendCommandToToon = SendCommandToToon
 EMAPrivate.Core.OnCommandReceived = OnCommandReceived
 EMAPrivate.Core.isEmaClassicBuild = isEmaClassicBuild
-EMAPrivate.Core.isEmaClassicBccBuild = isEmaClassicBccBuild
+EMAPrivate.Core.isEmaClassicBccBuild = function()
+	if _G.WOW_PROJECT_ID == _G.WOW_PROJECT_BURNING_CRUSADE_CLASSIC then
+		return true
+	end
+	if _G.WOW_PROJECT_ID == _G.WOW_PROJECT_WRATH_CLASSIC then
+		return true
+	end
+	if _G.WOW_PROJECT_ID == _G.WOW_PROJECT_CLASSIC then
+		if C_Container == nil then
+			return true
+		end
+	end
+	return false
+end
 EMAPrivate.Core.isEmaBetaBuild = isEmaBetaBuild
 EMAPrivate.Core.isEmaAlphaBuild = isEmaAlphaBuild
 EMAPrivate.Core.SendSettingsAllModules = EMA.SendSettingsAllModules
 EMAPrivate.Core.RefreshSettingsAllModules = EMA.RefreshSettingsAllModules
+
+function EMAPrivate.Core.IsModernApi()
+	return C_Container ~= nil
+end
+
+function EMAPrivate.Core.GetContainerNumSlots( bagID )
+	if C_Container and C_Container.GetContainerNumSlots then
+		return C_Container.GetContainerNumSlots( bagID )
+	else
+		return GetContainerNumSlots( bagID )
+	end
+end
+
+function EMAPrivate.Core.GetContainerItemItemLink( bagID, slotID )
+	if C_Container and C_Container.GetContainerItemLink then
+		return C_Container.GetContainerItemLink( bagID, slotID )
+	else
+		return GetContainerItemLink( bagID, slotID )
+	end
+end
+
+function EMAPrivate.Core.GetContainerItemInfo( bagID, slotID )
+	if C_Container and C_Container.GetContainerItemInfo then
+		local info = C_Container.GetContainerItemInfo( bagID, slotID )
+		if info then
+			return info.iconFileID, info.stackCount, info.isLocked, info.quality, info.isReadable, info.hasLoot, info.hyperlink, info.isFiltered, info.hasNoValue, info.itemID, info.isBound
+		end
+		return nil
+	else
+		return GetContainerItemInfo( bagID, slotID )
+	end
+end
+
+function EMAPrivate.Core.GetContainerItemLink( bagID, slotID )
+	if C_Container and C_Container.GetContainerItemLink then
+		return C_Container.GetContainerItemLink( bagID, slotID )
+	else
+		return GetContainerItemLink( bagID, slotID )
+	end
+end
+
+function EMAPrivate.Core.PickupContainerItem( bagID, slotID )
+	if C_Container and C_Container.PickupContainerItem then
+		C_Container.PickupContainerItem( bagID, slotID )
+	else
+		PickupContainerItem( bagID, slotID )
+	end
+end
+
+function EMAPrivate.Core.UseContainerItem( bagID, slotID, target, isReagent )
+	if C_Container and C_Container.UseContainerItem then
+		C_Container.UseContainerItem( bagID, slotID, target, isReagent )
+	else
+		UseContainerItem( bagID, slotID, target, isReagent )
+	end
+end

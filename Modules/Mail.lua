@@ -1,8 +1,8 @@
 -- ================================================================================ --
 --				EMA - ( Ebony's MultiBoxing Assistant )    							--
---				Current Author: Jennifer Calladine (Ebony)								--
+--				Current Author: Jennifer Cally (Ebony)								--
 --																					--
---				License: All Rights Reserved 2018-2025 Jennifer Cally					--
+--				License: All Rights Reserved 2018-2022 Jennifer Calladine					--
 --																					--
 --				Some Code Used from "Jamba" that is 								--
 --				Released under the MIT License 										--
@@ -26,6 +26,12 @@ local EMAUtilities = LibStub:GetLibrary( "EbonyUtilities-1.0" )
 local EMAHelperSettings = LibStub:GetLibrary( "EMAHelperSettings-1.0" )
 --local LibBagUtils = LibStub:GetLibrary( "LibBagUtils-1.0" )
 local AceGUI = LibStub( "AceGUI-3.0" )
+
+-- Get API wrappers from Core.
+local GetContainerNumSlots = EMAPrivate.Core.GetContainerNumSlots
+local GetContainerItemInfo = EMAPrivate.Core.GetContainerItemInfo
+local GetContainerItemLink = EMAPrivate.Core.GetContainerItemLink
+local GetContainerItemItemLink = EMAPrivate.Core.GetContainerItemItemLink
 
 --  Constants and Locale for this module.
 EMA.moduleName = "Mail"
@@ -867,7 +873,7 @@ function EMA.HandleModifiedItemClick(itemLink, itemLocation)
 			--EMA:Print("test2", GUIPanel, "vs", currentModule )
 			if currentModule ~= nil then
 				local itemID, itemLink = GameTooltip:GetItem()
-				local ItemLink = C_Container.GetContainerItemLink(bag, slot)
+				local ItemLink = GetContainerItemLink(bag, slot)
 				--EMA:Print("test1", itemID, itemLink )
 				if itemLink ~= nil then
 					EMA.settingsControl.MailItemsEditBoxMailItem:SetText( "" )
@@ -936,14 +942,13 @@ function EMA:MAIL_SHOW(event, ...)
 	--EMA:Print("test")
 	if EMA.db.showEMAMailWindow == true then
 		if not IsShiftKeyDown() then
-			--EMA:AddAllToMailBox()
-			EMA:ScheduleTimer( "AddAllToMailBox", 0.3 )
+			EMA:AddAllToMailBox()
 		else 
 			EMA.ShiftkeyDown = true
 		end	
 	end
 	if EMA.db.adjustMoneyWithMail == true and EMA.db.showEMAMailWindow == true then
-		EMA:ScheduleTimer( "AddGoldToMailBox", 0.6 )
+		EMA:ScheduleTimer( "AddGoldToMailBox", 0.3 )
 	end
 end
 
@@ -960,16 +965,12 @@ function EMA:AddAllToMailBox()
 	SendMailMoneySilver:SetText( "" )
 	SendMailMoneyCopper:SetText( "" )
 	SendMailNameEditBox:ClearFocus()
-	EMA.Count = 1 
-	-- 10.x changes
 	local EMA_NUMBER_BAG_SLOTS = NUM_BAG_SLOTS
-	if EMAPrivate.Core.isEmaClassicBuild() == false then
-		if EMAPrivate.Core.isEmaClassicBccBuild()  == false then
-			EMA_NUMBER_BAG_SLOTS = 5
-		end
+	if EMAPrivate.Core.isEmaClassicBccBuild() == false then
+		EMA_NUMBER_BAG_SLOTS = 5
 	end
 	for bagID = 0, EMA_NUMBER_BAG_SLOTS do
-		for slotID = 1, C_Container.GetContainerNumSlots( bagID ),1 do 
+		for slotID = 1, GetContainerNumSlots( bagID ),1 do 
 			
 			local item = Item:CreateFromBagAndSlot(bagID, slotID)
 			if ( item ) then
@@ -1045,14 +1046,9 @@ function EMA:AddAllToMailBox()
 								EMA.Count = EMA.Count + 1
 								SendMailNameEditBox:SetText( toonName )
 								SendMailSubjectEditBox:SetText( L["SENT_AUTO_MAILER"] )
-								-- More 10.x Changes
-								if EMAPrivate.Core.isEmaClassicBuild() == false then
-									--EMA:Print("B$s", bagID , slotID)
-									--Container.PickupItem( bagID, slotID )
+								if C_Container and C_Container.PickupContainerItem then
 									C_Container.PickupContainerItem( bagID, slotID )
-									ClickSendMailItemButton()
-									-- Does not work 10.1???? use command above
-									--C_Container.UseContainerItem( bagID , slotID  )
+									C_Container.UseContainerItem( bagID , slotID  )
 								else
 									PickupContainerItem( bagID, slotID )
 									UseContainerItem( bagID , slotID  )

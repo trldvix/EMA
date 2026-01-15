@@ -1,8 +1,8 @@
 -- ================================================================================ --
 --				EMA - ( Ebony's MultiBoxing Assistant )    							--
---				Current Author: Jennifer Calladine (Ebony)								--
+--				Current Author: Jennifer Cally (Ebony)								--
 --																					--
---				License: All Rights Reserved 2018-2025 Jennifer Cally					--
+--				License: All Rights Reserved 2018-2022 Jennifer Calladine					--
 --																					--
 --				Some Code Used from "Jamba" that is 								--
 --				Released under the MIT License 										--
@@ -48,7 +48,7 @@ EMA.moduleOrder = 20
 -- Settings - the values to store and their defaults for the settings database.
 EMA.settings = {
 	profile = {
-		enableQuestWatcher = false,
+		enableQuestWatcher = true,
 		watcherFramePoint = "RIGHT",
 		watcherFrameRelativePoint = "RIGHT",
 		watcherFrameXOffset = 0,
@@ -206,10 +206,8 @@ function EMA:OnEnable()
 	EMA:UpdateUnlockWatcherFrame()
 	-- To Hide After elv changes. --ebony
 	EMA:ScheduleTimer( "UpdateHideBlizzardWatchFrame", 2 )
-	
 	if EMA.db.enableQuestWatcher == true then
 		EMA:QuestWatcherQuestListScrollRefresh()
-		EMA:ScheduleRepeatingTimer( "UpdateHideBlizzardWatchFrame", 0.01)
 	end
 	EMAQuestMapQuestOptionsDropDown.questID = 0
 	EMAQuestMapQuestOptionsDropDown.questText = nil
@@ -1051,8 +1049,7 @@ function EMA:QUEST_WATCH_UPDATE( event, ... )
 	--EMA:Print("test4")
 	if EMA.db.enableQuestWatcher == true then
 		-- Wait a bit for the correct information to come through from the server...
-		EMA:ScheduleTimer( "EMAQuestWatcherUpdate", 1, true, "all" )
-		EMA:ScheduleTimer( "UpdateHideBlizzardWatchFrame", 2 )
+		EMA:ScheduleTimer( "EMAQuestWatcherUpdate", 1, true, "all" )		
 	end
 end
 
@@ -1062,11 +1059,7 @@ function EMA:QUEST_LOG_UPDATE( event, ... )
 	if EMA.db.enableQuestWatcher == true then
 		-- Wait a bit for the correct information to come through from the server...
 		EMA:ScheduleTimer( "EMAQuestWatcherUpdate", 1, true, "all" )
-		EMA:ScheduleTimer( "UpdateHideBlizzardWatchFrame", 1 )
-		--EMA:ScheduleTimer( "UpdateHideBlizzardWatchFrame", 1 )
-		--EMA:UpdateHideBlizzardWatchFrame()
 		-- For PopUpQuests!
-		--[[
 		for i = 1, GetNumAutoQuestPopUps() do
 			local questID, popUpType = GetAutoQuestPopUp(i);
 			if ( not C_QuestLog.IsQuestBounty(questID) ) then
@@ -1080,7 +1073,6 @@ function EMA:QUEST_LOG_UPDATE( event, ... )
 				end
 			end
 		end
-	]]
 	end
 end
 
@@ -1295,7 +1287,7 @@ function EMA:QUEST_AUTOCOMPLETE( event, questID, ... )
 end
 
 function EMA:DoAutoQuestFieldComplete( characterName, questID )
-	--EMA:EMAAddAutoQuestPopUp( questID, "COMPLETE", characterName )
+	EMA:EMAAddAutoQuestPopUp( questID, "COMPLETE", characterName )
 end
 
 function EMA:QUEST_COMPLETE()
@@ -1326,7 +1318,7 @@ function EMA:QUEST_DETAIL(event, ...)
 end		
 
 function EMA:DoAutoQuestFieldOffer( characterName, questID )
-	--EMA:EMAAddAutoQuestPopUp( questID, "OFFER", characterName )
+	EMA:EMAAddAutoQuestPopUp( questID, "OFFER", characterName )
 end
 
 -------------------------------------------------------------------------------------------------------------
@@ -1434,10 +1426,10 @@ function EMA:EMAQuestWatcherQuestLogUpdate( useCache )
 				--EMA:Print("testAA", info.title, info.questLogIndex, info.questID, info.campaignID, info.level, info.difficultyLevel, info.suggestedGroup, info.frequency, info.isHeader, info.isCollapsed, info.startEvent, info.isTask, info.isBounty, info.isStory, info.isScaling, info.isOnMap, info.hasLocalPOI, info.isHidden, info.isAutoComplete, info.overridesSortOrder, info.readyForTranslation )
 				local questLogIndex = C_QuestLog.GetLogIndexForQuestID(info.questID)
 				local numObjectives = GetNumQuestLeaderBoards(questLogIndex )
-				local isComplete = C_QuestLog.IsComplete( info.questID )
+				local isComplete = C_QuestLog.IsComplete( info.questID)
 				--local isComplete = EMA:IsCompletedAutoCompleteFieldQuest( questIndex, isComplete )
 				if info.isHeader == false and info.isHidden == false then
-				--EMA:Print("EMAQuestData", questID, title, questLogIndex, numObjectives, requiredMoney, isComplete, startEvent, isAutoComplete, failureTime, timeElapsed, questType, isTask, isBounty, isStory, isOnMap, hasLocalPOI, isHidden, "map", IsOnMap)
+				--EMA:Print("EMAQuestData", questID, title, questLogIndex, numObjectives, requiredMoney, isComplete, startEvent, isAutoComplete, failureTime, timeElapsed, questType, isTask, isBounty, isStory, isOnMap, hasLocalPOI, isHidden)
 				if numObjectives > 0 then							 
 					for iterateObjectives = 1, numObjectives do
 						--EMA:Print( "NumObjs:", numObjectives )
@@ -1471,7 +1463,6 @@ function EMA:EMAQuestWatcherQuestLogUpdate( useCache )
 	end
 	--EMA:Print("QUESTWATCHUPDATING DONE")
 	EMA.QUESTWATCHUPDATING = false
-	
 end
 
 function EMA:EMAQuestWatcherWorldQuestUpdate( useCache )
@@ -1780,7 +1771,6 @@ function EMA:GetQuestItemFromQuestID(findQuestID)
 		if not info.isHeader then	
 			if findQuestID == info.questID then
 				local questItemLink, questItemIcon, questItemCharges = GetQuestLogSpecialItemInfo( iterateQuests )
-				--local data = C_TooltipInfo.GetQuestLogSpecialItem(iterateQuests)
 				if questItemLink then
 					--EMA:Print("Item", questItemLink, questItemIcon, questID)
 					return questItemLink, questItemIcon
@@ -1792,17 +1782,14 @@ function EMA:GetQuestItemFromQuestID(findQuestID)
 	end
 end	
 
-local function GetInlineFactionIcon(questID)
-	local tagInfo = C_QuestLog.GetQuestTagInfo(questID)
-	
-	
-	EMA:Print("test1q1", questID, factionGroup)
-	--local coords = faction == "Horde" and QUEST_TAG_TCOORDS.HORDE or QUEST_TAG_TCOORDS.ALLIANCE;
-	--return CreateTextureMarkup(QUEST_ICONS_FILE, QUEST_ICONS_FILE_WIDTH, QUEST_ICONS_FILE_HEIGHT, 18, 18
-	--, coords[1]
-	--, coords[2] - 0.02 -- Offset to stop bleeding from next image
-	--, coords[3]
-	--, coords[4], 0, 2);
+local function GetInlineFactionIcon()
+	local faction = UnitFactionGroup("player");
+	local coords = faction == "Horde" and QUEST_TAG_TCOORDS.HORDE or QUEST_TAG_TCOORDS.ALLIANCE;
+	return CreateTextureMarkup(QUEST_ICONS_FILE, QUEST_ICONS_FILE_WIDTH, QUEST_ICONS_FILE_HEIGHT, 18, 18
+	, coords[1]
+	, coords[2] - 0.02 -- Offset to stop bleeding from next image
+	, coords[3]
+	, coords[4], 0, 2);
 end
 
 function EMA:GetQuestHeaderInWatchList( questID, questName, characterName )
@@ -1825,7 +1812,7 @@ function EMA:GetQuestHeaderInWatchList( questID, questName, characterName )
 	end
 	if (C_CampaignInfo.IsCampaignQuest(questID) ) then
 			--EMA:Print("CampaignQuest", questName)
-		--icon = GetInlineFactionIcon(questID)
+		icon = GetInlineFactionIcon()
 	end	
 	local questWatchInfo = EMA:CreateQuestWatchInfo( questID, "QUEST_HEADER", -1, "", questName, icon )
 	
@@ -2183,7 +2170,7 @@ function EMA:QuestWatcherQuestListScrollRefresh()
 			frame.questWatchList.rowHeight
 		)
 	end
-	--EMA:DisplayAutoQuestPopUps()
+	EMA:DisplayAutoQuestPopUps()
 end
 
 
@@ -2250,7 +2237,7 @@ function EMA.QuestWatcherQuestListRowOnEnter( rowNumber, columnNumber )
 		end	
 			if columnNumber == 1 then
 				toolTipFrame:SetAlpha( 1.0 )
-				if ( HaveQuestData(questID) and GetQuestLogRewardXP(questID) == 0 and C_QuestLog.GetQuestRewardCurrencies(questID) == 0
+				if ( HaveQuestData(questID) and GetQuestLogRewardXP(questID) == 0 and GetNumQuestLogRewardCurrencies(questID) == 0
 					and GetNumQuestLogRewards(questID) == 0 and GetQuestLogRewardMoney(questID) == 0 and GetQuestLogRewardArtifactXP(questID) == 0 ) then
 					GameTooltip:Hide()
 					return
@@ -2389,7 +2376,7 @@ function EMA:EMAAddAutoQuestPopUp( questID, popUpType, characterName )
 		EMA.currentAutoQuestPopups[questID] = {}
 	end	
 	EMA.currentAutoQuestPopups[questID][characterName] = popUpType
-	--EMA:DisplayAutoQuestPopUps()
+	EMA:DisplayAutoQuestPopUps()
 end
 
 function EMA:EMARemoveAutoQuestPopUp( questID, characterName )

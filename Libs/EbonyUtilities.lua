@@ -150,19 +150,16 @@ end
 -- itemLink - the item link to extract an item id from.
 -- Gets an item id from an item link.  Returns nil, if an item id could not be found.
 function EbonyUtilities:GetItemIdFromItemLink( itemLink )
-	--print("ema", itemLink )
 	if itemLink == nil then
 		return
 	end
 	local itemIdFound = nil 
-	--local itemStringStart, itemStringEnd, itemString = itemLink:find( "^|c%x+|H(.+)|h%[.*%]" )
-	local itemStringStart, itemStringEnd, itemString = itemLink:find( "^|c[^|]+|H(item[%d:]+)|h%[" )
-	--print("test", itemStringStart, itemStringEnd, itemString )
+	local itemStringStart, itemStringEnd, itemString = itemLink:find( "^|c%x+|H(.+)|h%[.*%]" )
 	if itemStringStart then
 		local matchStart, matchEnd, itemId = itemString:find( "(item:%d+)" )
 		if matchStart then
 			itemIdFound = itemId	
-		end	
+		end
 	end
 	return itemIdFound	
 end
@@ -229,7 +226,7 @@ function EbonyUtilities:MerchantFrameIsShown()
 	if MerchantFrame:IsVisible() == true then
 		Show = true
 	else
-		if C_AddOns.IsAddOnLoaded("TradeSkillMaster" ) == true then
+		if IsAddOnLoaded("TradeSkillMaster" ) == true then
 			if TSM_API.IsUIVisible("VENDORING") == true then
 				Show = true
 			end

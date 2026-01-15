@@ -1,14 +1,20 @@
 -- ================================================================================ --
 --				EMA - ( Ebony's MultiBoxing Assistant )    							--
---				Current Author: Jennifer Calladine (Ebony)								--
+--				Current Author: Jennifer Cally (Ebony)								--
 --																					--
---				License: All Rights Reserved 2018-2025 Jennifer Cally					--
+--				License: All Rights Reserved 2018-2022 Jennifer Calladine					--
 --																					--
 --				Some Code Used from "Jamba" that is 								--
 --				Released under the MIT License 										--
 --				"Jamba" Copyright 2008-2015  Michael "Jafula" Miller				--
 --																					--
 -- ================================================================================ --
+
+-- DO NOT lOAD over WOLTK.
+local _, _, _, tocversion = GetBuildInfo()
+if tocversion >= 30000 then
+	return
+end	
 
 -- With Help From Jabberie, EMA Edit By Jennifer
 
