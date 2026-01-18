@@ -6,6 +6,7 @@
 ## SavedVariables: CoreProfileDB, CommunicationsProfileDB, TeamProfileDB, TagProfileDB, MessageProfileDB, InformationProfileDB, InformationClassicProfileDB, DisplayTeamProfileDB, FollowProfileDB, GuildProfileDB, InteractionProfileDB, ItemUseProfileDB, PurchaseProfileDB, QuestProfileDB,  QuestWatcherProfileDB, SellProfileDB, TalkProfileDB, ToonProfileDB, TradeProfileDB, MailProfileDB, BankProfileDB, ISBoxerProfileDB
 
 #Libs
+Core\Compatibility.lua
 Embeds.xml
 Libs\EbonyUtilities.lua
 

@@ -1730,7 +1730,7 @@ function EMA:LFGTeleport( event, arg1, ... )
 end
 
 function EMA:DoLFGTeleport(port)
-	if EMAPrivate.Core.isEmaClassicBccBuild() == ture then return end	
+	if EMAPrivate.Core.isEmaClassicBccBuild() == true then return end	
 	--EMA:Print("TeleCommand", port)
 	EMA.isInternalCommand = true
 	if IsShiftKeyDown() == false then

@@ -671,7 +671,7 @@ function EMA:SettingsUpdateBorderStyle()
 end
 
 function EMA:SettingsUpdateFontStyle()
-	local textFont = EMA.SharedMedia:Fetch( "font", EMA.db.watchFontStyle )
+	local textFont = EMA.SharedMedia:Fetch( "font", EMA.db.watchFontStyle ) or [[Fonts\FRIZQT__.TTF]]
 	local textSize = EMA.db.watchFontSize
 	local frame = EMAQuestWatcherFrame
 	frame.titleName:SetFont( textFont , textSize , "OUTLINE")

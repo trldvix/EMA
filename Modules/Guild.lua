@@ -884,7 +884,7 @@ end
 
 function EMA:AddAllToGuildBank()
 	local delay = 0
-	local EMA_NUMBER_BAG_SLOTS = NUM_BAG_SLOTS
+	local EMA_NUMBER_BAG_SLOTS = _G.EMA_NUM_BAG_SLOTS
 	if EMAPrivate.Core.IsModernApi() == true then
 		EMA_NUMBER_BAG_SLOTS = 5
 	end

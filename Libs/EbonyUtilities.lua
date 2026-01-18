@@ -368,10 +368,8 @@ end
 
 function EbonyUtilities:FreeBagSpace()
 	local freeBagSpace = 0
-	local EMA_NUMBER_BAG_SLOTS = NUM_BAG_SLOTS
-	if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
-		EMA_NUMBER_BAG_SLOTS = 5
-	end	
+	local EMA_NUMBER_BAG_SLOTS = _G.EMA_NUM_BAG_SLOTS
+
 	for bagID = 0, EMA_NUMBER_BAG_SLOTS do
 		local freeslots = C_Container.GetContainerNumFreeSlots( bagID )
 		freeBagSpace = freeBagSpace + freeslots

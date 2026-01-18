@@ -870,7 +870,7 @@ function EMA:TradeAllItems()
 		return
 	end
 	-- 10.x changes
-	local EMA_NUMBER_BAG_SLOTS = NUM_BAG_SLOTS
+	local EMA_NUMBER_BAG_SLOTS = _G.EMA_NUM_BAG_SLOTS
 	if EMAPrivate.Core.isEmaClassicBccBuild() == false then
 		EMA_NUMBER_BAG_SLOTS = 5
 	end

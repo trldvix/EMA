@@ -856,9 +856,7 @@ EMAPrivate.Core.isEmaClassicBccBuild = function()
 		return true
 	end
 	if _G.WOW_PROJECT_ID == _G.WOW_PROJECT_CLASSIC then
-		if C_Container == nil then
-			return true
-		end
+		return true
 	end
 	return false
 end

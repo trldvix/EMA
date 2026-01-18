@@ -489,7 +489,7 @@ function EMA:SettingsUpdateStatusBarTexture()
 end
 
 function EMA:SettingsUpdateFontStyle()
-	local textFont = EMA.SharedMedia:Fetch( "font", EMA.db.fontStyle )
+	local textFont = EMA.SharedMedia:Fetch( "font", EMA.db.fontStyle ) or [[Fonts\FRIZQT__.TTF]]
 	local textSize = EMA.db.fontSize
 	for characterName, characterStatusBar in pairs( EMA.characterStatusBar ) do	
 		characterStatusBar["followBarText"]:SetFont( textFont , textSize , "OUTLINE")		
@@ -526,21 +526,21 @@ function EMA:CreateEMATeamStatusBar( characterName, parentFrame )
 	-- Get the status bars table.
 	local characterStatusBar = EMA.characterStatusBar[characterName]
 	-- Set the portrait.
-	local portraitName = EMA.globalFramePrefix.."PortraitButton"
-	local portraitButton = CreateFrame( "PlayerModel", portraitName, parentFrame )
+	local portraitFrameName = EMA.globalFramePrefix.."PortraitButton"..characterName
+	local portraitButton = CreateFrame( "PlayerModel", portraitFrameName, parentFrame )
 	portraitButton:ClearModel()
-	local portraitName = Ambiguate( characterName, "none" )
-	portraitButton:SetUnit( portraitName )
+	local portraitUnitName = Ambiguate( characterName, "none" )
+	portraitButton:SetUnit( portraitUnitName )
 	portraitButton:SetPortraitZoom( 1 )
     portraitButton:SetCamDistanceScale( 1 )
     portraitButton:SetPosition( 0, 0, 0 )
-	local portraitButtonClick = CreateFrame( "CheckButton", portraitName.."Click", parentFrame, "SecureActionButtonTemplate" )
+	local portraitButtonClick = CreateFrame( "CheckButton", portraitFrameName.."Click", parentFrame, "SecureActionButtonTemplate" )
 	portraitButtonClick:SetAttribute( "unit", Ambiguate( characterName, "all" ) )
 	characterStatusBar["portraitButton"] = portraitButton
 	characterStatusBar["portraitButtonClick"] = portraitButtonClick
 	
 	-- Set the follow bar.
-	local followName = EMA.globalFramePrefix.."FollowBar"
+	local followName = EMA.globalFramePrefix.."FollowBar"..characterName
 	local followBar = CreateFrame( "StatusBar", followName, parentFrame) --, "TextStatusBar,SecureActionButtonTemplate" )
 	followBar.backgroundTexture = followBar:CreateTexture( followName.."BackgroundTexture", "ARTWORK" )
 	followBar.backgroundTexture:SetColorTexture( 0.58, 0.0, 0.55, 0.15 )
@@ -565,7 +565,7 @@ function EMA:CreateEMATeamStatusBar( characterName, parentFrame )
 	EMA:SettingsUpdateFollowText( characterName ) --, UnitLevel( Ambiguate( characterName, "none" ) ), nil, nil )
 	
 	-- Set the experience bar.
-	local experienceName = EMA.globalFramePrefix.."ExperienceBar"
+	local experienceName = EMA.globalFramePrefix.."ExperienceBar"..characterName
 	local experienceBar = CreateFrame( "StatusBar", experienceName, parentFrame, "AnimatedStatusBarTemplate" ) --"TextStatusBar,SecureActionButtonTemplate" )
 	experienceBar.backgroundTexture = experienceBar:CreateTexture( experienceName.."BackgroundTexture", "ARTWORK" )
 	experienceBar.backgroundTexture:SetColorTexture( 0.0, 0.39, 0.88, 0.15 )
@@ -592,8 +592,8 @@ function EMA:CreateEMATeamStatusBar( characterName, parentFrame )
 	EMA:UpdateExperienceStatus( characterName, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil )	
 	
 	-- Set the Gold bar.
-	local experienceGoldName = EMA.globalFramePrefix.."ExperienceGoldBar"
-	local experienceGoldBar = CreateFrame( "StatusBar", experienceGoldName, parentFrame, "TextStatusBar", "SecureActionButtonTemplate" )
+	local experienceGoldName = EMA.globalFramePrefix.."ExperienceGoldBar"..characterName
+	local experienceGoldBar = CreateFrame( "StatusBar", experienceGoldName, parentFrame, "TextStatusBar" )
 	experienceGoldBar.backgroundTexture = experienceGoldBar:CreateTexture( experienceGoldName.."BackgroundTexture", "ARTWORK" )
 	experienceGoldBar.backgroundTexture:SetColorTexture( 1.0, 0.0, 0.0, 0.15 )
 	experienceGoldBar:SetStatusBarTexture( statusBarTexture )
@@ -618,7 +618,7 @@ function EMA:CreateEMATeamStatusBar( characterName, parentFrame )
 	EMA:UpdateExperienceStatus( characterName, nil, nil, nil, nil, nil, nil, nil, nil )	
 	
 	-- Set the reputation bar.
-	local reputationName = EMA.globalFramePrefix.."ReputationBar"
+	local reputationName = EMA.globalFramePrefix.."ReputationBar"..characterName
 	local reputationBar = CreateFrame( "StatusBar", reputationName, parentFrame, "AnimatedStatusBarTemplate" ) --"TextStatusBar,SecureActionButtonTemplate" )
 	reputationBar.backgroundTexture = reputationBar:CreateTexture( reputationName.."BackgroundTexture", "ARTWORK" )
 	reputationBar.backgroundTexture:SetColorTexture( 0.0, 0.39, 0.88, 0.15 )
@@ -646,8 +646,8 @@ function EMA:CreateEMATeamStatusBar( characterName, parentFrame )
 	EMA:UpdateReputationStatus( characterName, nil, nil, nil )
 	
 	-- Set the health bar.
-	local healthName = EMA.globalFramePrefix.."HealthBar"
-	local healthBar = CreateFrame( "StatusBar", healthName, parentFrame, "TextStatusBar","SecureActionButtonTemplate" )
+	local healthName = EMA.globalFramePrefix.."HealthBar"..characterName
+	local healthBar = CreateFrame( "StatusBar", healthName, parentFrame, "TextStatusBar" )
 	healthBar.backgroundTexture = healthBar:CreateTexture( healthName.."BackgroundTexture", "ARTWORK" )
 	healthBar.backgroundTexture:SetColorTexture( 0.58, 0.0, 0.55, 0.15 )
 	healthBar:SetStatusBarTexture( statusBarTexture )
@@ -657,8 +657,8 @@ function EMA:CreateEMATeamStatusBar( characterName, parentFrame )
 	healthBar:SetValue( 100 )
 	healthBar:SetFrameStrata( "LOW" )
 	healthBar:SetAlpha( 1 )
-	local healthIncomingName = EMA.globalFramePrefix.."HealthIncomingBar"
-	local healthIncomingBar = CreateFrame( "StatusBar", healthIncomingName, parentFrame, "TextStatusBar","SecureActionButtonTemplate" )
+	local healthIncomingName = EMA.globalFramePrefix.."HealthIncomingBar"..characterName
+	local healthIncomingBar = CreateFrame( "StatusBar", healthIncomingName, parentFrame, "TextStatusBar" )
 	healthIncomingBar.backgroundTexture = healthIncomingBar:CreateTexture( healthIncomingName.."BackgroundTexture", "ARTWORK" )
 	healthIncomingBar.backgroundTexture:SetColorTexture( 0.58, 0.0, 0.55, 0.15 )
 	healthIncomingBar:SetStatusBarTexture( statusBarTexture )
@@ -687,8 +687,8 @@ function EMA:CreateEMATeamStatusBar( characterName, parentFrame )
 	EMA:UpdateHealthStatus( characterName, nil, nil )
 	
 	-- Set the power bar.
-	local powerName = EMA.globalFramePrefix.."PowerBar"
-	local powerBar = CreateFrame( "StatusBar", powerName, parentFrame, "TextStatusBar","SecureActionButtonTemplate" )
+	local powerName = EMA.globalFramePrefix.."PowerBar"..characterName
+	local powerBar = CreateFrame( "StatusBar", powerName, parentFrame, "TextStatusBar" )
 	powerBar.backgroundTexture = powerBar:CreateTexture( powerName.."BackgroundTexture", "ARTWORK" )
 	powerBar.backgroundTexture:SetColorTexture( 0.58, 0.0, 0.55, 0.15 )
 	powerBar:SetStatusBarTexture( statusBarTexture )
@@ -713,8 +713,8 @@ function EMA:CreateEMATeamStatusBar( characterName, parentFrame )
 	EMA:UpdatePowerStatus( characterName, nil, nil, nil )
 	
 	-- Set the Combo Points bar.
-	local comboName = EMA.globalFramePrefix.."ComboBar"
-	local comboBar = CreateFrame( "StatusBar", comboName, parentFrame, "TextStatusBar","SecureActionButtonTemplate" )
+	local comboName = EMA.globalFramePrefix.."ComboBar"..characterName
+	local comboBar = CreateFrame( "StatusBar", comboName, parentFrame, "TextStatusBar" )
 	comboBar.backgroundTexture = comboBar:CreateTexture( comboName.."BackgroundTexture", "ARTWORK" )
 	comboBar.backgroundTexture:SetColorTexture( 0.58, 0.0, 0.55, 0.15 )
 	comboBar:SetStatusBarTexture( statusBarTexture )
@@ -725,7 +725,7 @@ function EMA:CreateEMATeamStatusBar( characterName, parentFrame )
 	comboBar:SetValue( 5 )
 	comboBar:SetFrameStrata( "LOW" )
 	comboBar:SetAlpha( 1 )
-	local comboBarClick = CreateFrame( "CheckButton", comboName.."Click"..characterName, parentFrame, "SecureActionButtonTemplate" )
+	local comboBarClick = CreateFrame( "CheckButton", comboName.."Click", parentFrame, "SecureActionButtonTemplate" )
 	comboBarClick:SetAttribute( "unit", characterName )
 	comboBarClick:SetFrameStrata( "MEDIUM" )
 	characterStatusBar["comboBar"] = comboBar
@@ -740,7 +740,7 @@ function EMA:CreateEMATeamStatusBar( characterName, parentFrame )
 	EMA:UpdateComboStatus( characterName, nil, nil )
 	
 	-- Set the GCD Bar.
-	local gCDFrameName = EMA.globalFramePrefix.."GCDFrame"
+	local gCDFrameName = EMA.globalFramePrefix.."GCDFrame"..characterName
 	local gCDFrame = CreateFrame( "Frame", gCDFrameName, parentFrame )
 	--gCDFrame.backgroundTexture = gCDFrame:CreateTexture( gCDFrameName.."BackgroundTexture", "ARTWORK" )
 	--gCDFrame.backgroundTexture:SetColorTexture( 0.58, 0.0, 0.55, 0.15 )
@@ -2602,7 +2602,7 @@ function EMA:UpdateExperienceStatus( characterName, playerExperience, playerMaxE
 	end	
 	--EMA:Print("test", currentGold, "v", experienceGoldBarText.currentGold)
 	if currentGold == nil then 
-		currentGold = experienceGoldBarText.currentGold
+		currentGold = experienceGoldBarText.currentGold or 0
 	end
 	
 	experienceBarText.playerExperience = playerExperience
@@ -2651,7 +2651,7 @@ function EMA:UpdateExperienceStatus( characterName, playerExperience, playerMaxE
 	end
 	--EMA:Print("arttest", goldText)
 	experienceGoldBarText:SetText( goldText )		
-	experienceGoldBar:SetStatusBarColor( 0.80,0.60,0.00, 0	)
+	experienceGoldBar:SetStatusBarColor( 0.80,0.60,0.00, 1.0	)
 	experienceGoldBar.backgroundTexture:SetColorTexture( 0.80, 0.60, 0.00, 0.20 )
 end	
 

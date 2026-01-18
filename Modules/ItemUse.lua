@@ -207,7 +207,7 @@ end
 
 local function CreateEMAItemUseFrame()
 	-- The frame.	EMAItemUseWindowFrame
-	local frame = CreateFrame("Frame", "EMAItemUseWindowFrame", UIParent, BackdropTemplateMixin and "SecureHandlerStateTemplate, BackdropTemplate" or "SecureHandlerStateTemplate")
+	local frame = CreateFrame("Frame", "EMAItemUseWindowFrame", UIParent, BackdropTemplateMixin and "SecureHandlerStateTemplate,BackdropTemplate" or "SecureHandlerStateTemplate")
 	if BackdropTemplateMixin then
 		Mixin(frame, BackdropTemplateMixin)
 	end
@@ -477,10 +477,12 @@ function EMA:CreateEMAItemUseItemContainer( itemNumber, parentFrame )
         clickOnDown = false,
         flyoutDirection = "UP",
     }
-	local containerButton = LibActionButton:CreateButton( itemNumber, containerButtonName, EMAItemUseWindowFrame, buttonConfig )
-	containerButton:SetState( "0", "empty", nil)
-	containerButton.itemNumber = itemNumber
-	itemContainer["container"] = containerButton	
+	local containerButton = LibActionButton:CreateButton( itemNumber, containerButtonName, parentFrame, buttonConfig )
+	if containerButton then
+		containerButton:SetState( "0", "empty", nil)
+		containerButton.itemNumber = itemNumber
+		itemContainer["container"] = containerButton	
+	end
 end
 
 -- Get API wrappers from Core.
@@ -490,7 +492,7 @@ local GetContainerItemLink = EMAPrivate.Core.GetContainerItemLink
 
 --ebony test Using the wowapi and not the scanning of tooltips
 function EMA:CheckForQuestItemAndAddToBar()	
-	for bag = 0, NUM_BAG_SLOTS do
+	for bag = 0, _G.EMA_NUM_BAG_SLOTS do
 		for slot = 1, GetContainerNumSlots(bag) do
 			local itemLink = GetContainerItemLink(bag, slot)
 			if itemLink and itemLink:match("item:%d") then
@@ -565,7 +567,7 @@ end
 --[[
 -- Add satchels to item bar.
 function EMA:CheckForSatchelsItemAndAddToBar()
-	for bag = 0, NUM_BAG_SLOTS do
+	for bag = 0, _G.EMA_NUM_BAG_SLOTS do
 		for slot = 1, GetContainerNumSlots(bag) do
 			local _, _, _, _, _, lootable = GetContainerItemInfo(bag, slot)
 			if link then
@@ -584,7 +586,7 @@ end
 -- NOWW VENDER TRASH 8.0
 -- Adds artifact power items to item bar.
 function EMA:CheckForArtifactItemAndAddToBar()
-	for bag = 0, NUM_BAG_SLOTS do
+	for bag = 0, _G.EMA_NUM_BAG_SLOTS do
 		for slot = 1, GetContainerNumSlots(bag) do
 			local itemLink = GetContainerItemLink(bag, slot)
 			if itemLink and itemLink:match("item:%d") then
@@ -603,7 +605,7 @@ end
 
 function EMA:IsInInventory(itemID)
 	local InBags = false
-	local EMA_NUMBER_BAG_SLOTS = NUM_BAG_SLOTS
+	local EMA_NUMBER_BAG_SLOTS = _G.EMA_NUM_BAG_SLOTS
 	if EMAPrivate.Core.isEmaClassicBccBuild() == false then
 		EMA_NUMBER_BAG_SLOTS = 5
 	end
@@ -679,7 +681,9 @@ function EMA:RefreshItemUseControls()
 		local itemContainer = EMA.itemContainer[iterateItems]
 		if itemContainer ~= nil then
 			local containerButton = itemContainer["container"]
-			containerButton:Hide()
+			if containerButton then
+				containerButton:Hide()
+			end
 		end
 	end
 	for iterateItems = 1, EMA.db.numberOfItems, 1 do
@@ -689,16 +693,18 @@ function EMA:RefreshItemUseControls()
 			itemContainer = EMA.itemContainer[iterateItems]
 		end
 		local containerButton = itemContainer["container"]
-		row = math.floor((iterateItems - 1) / itemsPerRow)
-		rowLeftModifier = math.floor((iterateItems-1) % itemsPerRow)
-		positionLeft = 6 + (EMA.itemSize * rowLeftModifier) + (EMA.db.itemUseHorizontalSpacing * rowLeftModifier)
-		local getHeight = EMA.UpdateHeight()
-		positionTop = -getHeight - (EMA.db.itemUseVerticalSpacing * 2) - (row * EMA.itemSize) - (row * EMA.db.itemUseVerticalSpacing)
-		containerButton:SetWidth( EMA.itemSize )
-		containerButton:SetHeight( EMA.itemSize )
-		containerButton:SetPoint( "TOPLEFT", parentFrame, "TOPLEFT", positionLeft, positionTop )
-		containerButton:Show()
-	end	
+		if containerButton then
+			row = math.floor((iterateItems - 1) / itemsPerRow)
+			rowLeftModifier = math.floor((iterateItems-1) % itemsPerRow)
+			positionLeft = 6 + (EMA.itemSize * rowLeftModifier) + (EMA.db.itemUseHorizontalSpacing * rowLeftModifier)
+			local getHeight = EMA.UpdateHeight()
+			positionTop = -getHeight - (EMA.db.itemUseVerticalSpacing * 2) - (row * EMA.itemSize) - (row * EMA.db.itemUseVerticalSpacing)
+			containerButton:SetWidth( EMA.itemSize )
+			containerButton:SetHeight( EMA.itemSize )
+			containerButton:SetPoint( "TOPLEFT", parentFrame, "TOPLEFT", positionLeft, positionTop )
+			containerButton:Show()
+		end
+	end
 	EMA:UpdateEMAItemUseDimensions()
 end
 

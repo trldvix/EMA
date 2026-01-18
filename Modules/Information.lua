@@ -2119,7 +2119,7 @@ function EMA:TellTeamKeys( event, msg, playerName)
 end	
 
 function EMA:LookForKeyStones()
-	for bagID = 0, NUM_BAG_SLOTS do
+	for bagID = 0, _G.EMA_NUM_BAG_SLOTS do
 		for slotID = 1, GetContainerNumSlots( bagID ), 1 do 
 			local item = Item:CreateFromBagAndSlot(bagID, slotID)
 			if ( item ) then

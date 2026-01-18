@@ -884,7 +884,7 @@ end
 
 function EMA:TellTeamEpicBoE( name )
 	--EMA:Print("loottest", name )
-		for bagID = 0, NUM_BAG_SLOTS do
+		for bagID = 0, _G.EMA_NUM_BAG_SLOTS do
 			for slotID = 1, GetContainerNumSlots( bagID ),1 do
 				--EMA:Print( "Bags OK. checking", itemLink )
 				local rarity = nil

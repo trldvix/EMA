@@ -351,44 +351,51 @@ function SetupSecureSnippets(button)
 
 	button:SetScript("OnDragStart", nil)
 	-- Wrapped OnDragStart(self, button, kind, value, ...)
-	button.header:WrapScript(button, "OnDragStart", [[
-		return self:RunAttribute("OnDragStart")
-	]])
-	-- Wrap twice, because the post-script is not run when the pre-script causes a pickup (doh)
-	-- we also need some phony message, or it won't work =/
-	button.header:WrapScript(button, "OnDragStart", [[
-		return "message", "update"
-	]], [[
-		self:RunAttribute("UpdateState", self:GetAttribute("state"))
-	]])
+	if button.header and button.header.WrapScript then
+		button.header:WrapScript(button, "OnDragStart", [[
+			return self:RunAttribute("OnDragStart")
+		]])
+		-- Wrap twice, because the post-script is not run when the pre-script causes a pickup (doh)
+		-- we also need some phony message, or it won't work =/
+		button.header:WrapScript(button, "OnDragStart", [[
+			return "message", "update"
+		]], [[
+			self:RunAttribute("UpdateState", self:GetAttribute("state"))
+		]])
+	end
 
 	button:SetScript("OnReceiveDrag", nil)
 	-- Wrapped OnReceiveDrag(self, button, kind, value, ...)
-	button.header:WrapScript(button, "OnReceiveDrag", [[
-		return self:RunAttribute("OnReceiveDrag", kind, value, ...)
-	]])
-	-- Wrap twice, because the post-script is not run when the pre-script causes a pickup (doh)
-	-- we also need some phony message, or it won't work =/
-	button.header:WrapScript(button, "OnReceiveDrag", [[
-		return "message", "update"
-	]], [[
-		self:RunAttribute("UpdateState", self:GetAttribute("state"))
-	]])
+	if button.header and button.header.WrapScript then
+		button.header:WrapScript(button, "OnReceiveDrag", [[
+			return self:RunAttribute("OnReceiveDrag", kind, value, ...)
+		]])
+		-- Wrap twice, because the post-script is not run when the pre-script causes a pickup (doh)
+		-- we also need some phony message, or it won't work =/
+		button.header:WrapScript(button, "OnReceiveDrag", [[
+			return "message", "update"
+		]], [[
+			self:RunAttribute("UpdateState", self:GetAttribute("state"))
+		]])
+	end
+
 end
 
 function WrapOnClick(button)
 	-- Wrap OnClick, to catch changes to actions that are applied with a click on the button.
-	button.header:WrapScript(button, "OnClick", [[
-		if self:GetAttribute("type") == "action" then
+	if button.header and button.header.WrapScript then
+		button.header:WrapScript(button, "OnClick", [[
+			if self:GetAttribute("type") == "action" then
+				local type, action = GetActionInfo(self:GetAttribute("action"))
+				return nil, format("%s|%s", tostring(type), tostring(action))
+			end
+		]], [[
 			local type, action = GetActionInfo(self:GetAttribute("action"))
-			return nil, format("%s|%s", tostring(type), tostring(action))
-		end
-	]], [[
-		local type, action = GetActionInfo(self:GetAttribute("action"))
-		if message ~= format("%s|%s", tostring(type), tostring(action)) then
-			self:RunAttribute("UpdateState", self:GetAttribute("state"))
-		end
-	]])
+			if message ~= format("%s|%s", tostring(type), tostring(action)) then
+				self:RunAttribute("UpdateState", self:GetAttribute("state"))
+			end
+		]])
+	end
 end
 
 -----------------------------------------------------------
@@ -464,7 +471,7 @@ function Generic:UpdateState(state)
 	self:SetAttribute(format("labtype-%s", state), self.state_types[state])
 	self:SetAttribute(format("labaction-%s", state), self.state_actions[state])
 	if state ~= tostring(self:GetAttribute("state")) then return end
-	if self.header then
+	if self.header and self.header.SetFrameRef then
 		self.header:SetFrameRef("updateButton", self)
 		self.header:Execute([[
 			local frame = self:GetFrameRef("updateButton")
@@ -753,7 +760,9 @@ function InitializeEventHandler()
 		lib.eventFrame:RegisterEvent("COMPANION_UPDATE")
 	end	
 	lib.eventFrame:RegisterEvent("UNIT_INVENTORY_CHANGED")
-	lib.eventFrame:RegisterEvent("LEARNED_SPELL_IN_TAB")
+	if not EMAPrivate.Core.isEmaClassicBccBuild() then
+		lib.eventFrame:RegisterEvent("LEARNED_SPELL_IN_TAB")
+	end
 	lib.eventFrame:RegisterEvent("PET_STABLE_UPDATE")
 	lib.eventFrame:RegisterEvent("PET_STABLE_SHOW")
 	lib.eventFrame:RegisterEvent("SPELL_ACTIVATION_OVERLAY_GLOW_SHOW")

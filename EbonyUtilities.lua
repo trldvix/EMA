@@ -102,6 +102,7 @@ EbonyUtilities.COPPER_PER_GOLD = EbonyUtilities.COPPER_PER_SILVER * EbonyUtiliti
 -- value - the amount of money to display formatted.
 -- Creates a money string from the value passed; don't pass negative values!
 function EbonyUtilities:FormatMoneyString( value )
+	value = value or 0
 	local gold = floor( value / ( EbonyUtilities.COPPER_PER_SILVER * EbonyUtilities.SILVER_PER_GOLD ) );
 	local silver = floor( ( value - ( gold * EbonyUtilities.COPPER_PER_SILVER * EbonyUtilities.SILVER_PER_GOLD ) ) / EbonyUtilities.COPPER_PER_SILVER );
 	local copper = mod( value, EbonyUtilities.COPPER_PER_SILVER );

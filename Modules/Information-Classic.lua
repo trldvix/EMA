@@ -75,9 +75,9 @@ EMA.settings = {
 		currencyFontStyle = L["ARIAL_NARROW"],
 		currencyFontSize = 12,		
 		currencyScale = 1,
-		currencyNameWidth = 60,
-		currencyPointsWidth = 50,
-		currencyGoldWidth = 140,
+		currencyNameWidth = 100,
+		currencyPointsWidth = 60,
+		currencyGoldWidth = 160,
 		currencySpacingWidth = 3,
 		currencyLockWindow = false,
 		currOpenStartUpMaster = false,
@@ -662,7 +662,7 @@ function EMA:CreateEMAToonCurrencyListFrame()
 	frameCharacterNameText:SetText( L["NAME"] )
 	frameCharacterNameText:SetTextColor( r, g, b, a )
 	frameCharacterNameText:SetPoint( "TOPLEFT", parentFrame, "TOPLEFT", left, top )
-	frameCharacterNameText:SetWidth( width * 2.5 )
+	frameCharacterNameText:SetWidth( width * 2.2 )
 	frameCharacterNameText:SetJustifyH( "LEFT" )
 	frame.characterNameText = frameCharacterNameText
 	left = left + (spacing * 2)
@@ -673,7 +673,7 @@ function EMA:CreateEMAToonCurrencyListFrame()
 	frameGoldText:SetTextColor( r, g, b, a )
 	frameGoldText:SetPoint( "TOPLEFT", parentFrame, "TOPLEFT", left, top )
 	frameGoldText:SetWidth( width )
-	frameGoldText:SetJustifyH( "CENTER" )
+	frameGoldText:SetJustifyH( "RIGHT" )
 	frame.GoldText = frameGoldText
 	left = left + spacing	
 	-- Set the BagSpace font string.
@@ -683,7 +683,7 @@ function EMA:CreateEMAToonCurrencyListFrame()
 	frameBagSpaceText:SetTextColor( r, g, b, a )
 	frameBagSpaceText:SetPoint( "TOPLEFT", parentFrame, "TOPLEFT", left, top )
 	frameBagSpaceText:SetWidth( width )
-	frameBagSpaceText:SetJustifyH( "CENTER" )
+	frameBagSpaceText:SetJustifyH( "RIGHT" )
 	frame.BagSpaceText = frameBagSpaceText
 	left = left + spacing
 	-- Set the CharDurr font string.
@@ -693,7 +693,7 @@ function EMA:CreateEMAToonCurrencyListFrame()
 	frameCharDurrText:SetTextColor( r, g, b, a )
 	frameCharDurrText:SetPoint( "TOPLEFT", parentFrame, "TOPLEFT", left, top )
 	frameCharDurrText:SetWidth( width )
-	frameCharDurrText:SetJustifyH( "CENTER" )
+	frameCharDurrText:SetJustifyH( "RIGHT" )
 	frame.CharDurrText = frameCharDurrText
 	left = left + spacing
 	
@@ -781,7 +781,7 @@ function EMA:SettingsUpdateBorderStyle()
 end
 
 function EMA:SettingsUpdateFontStyle()
-	local textFont = EMA.SharedMedia:Fetch( "font", EMA.db.currencyFontStyle )
+	local textFont = EMA.SharedMedia:Fetch( "font", EMA.db.currencyFontStyle ) or [[Fonts\FRIZQT__.TTF]]
 	local textSize = EMA.db.currencyFontSize
 	local frame = EMAToonCurrencyListFrame
 	frame.titleName:SetFont( textFont , textSize , "OUTLINE")
@@ -827,7 +827,7 @@ function EMA:CurrencyListSetColumnWidth()
  	if EMA.db.currGold == true then
 		parentFrame.GoldText:SetWidth( goldWidth )
 		parentFrame.GoldText:SetPoint( "TOPLEFT", parentFrame, "TOPLEFT", left, headingRowTopPoint )
-		left = left + goldWidth + (spacingWidth * 3)
+		left = left + goldWidth + spacingWidth
 		parentFrame.GoldText:Show()
 		haveGold = 1
 	else
@@ -863,7 +863,7 @@ function EMA:CurrencyListSetColumnWidth()
 			if EMA.db.currGold == true then
 				currencyFrameCharacterInfo.GoldText:SetWidth( goldWidth )
 				currencyFrameCharacterInfo.GoldText:SetPoint( "TOPLEFT", parentFrame, "TOPLEFT", left, characterRowTopPoint )
-				left = left + goldWidth + (spacingWidth * 3)
+				left = left + goldWidth + spacingWidth
 				currencyFrameCharacterInfo.GoldText:Show()
 			else
 				currencyFrameCharacterInfo.GoldText:Hide()
@@ -873,7 +873,7 @@ function EMA:CurrencyListSetColumnWidth()
 				currencyFrameCharacterInfo.BagSpaceText:SetPoint( "TOPLEFT", parentFrame, "TOPLEFT", left, characterRowTopPoint )
 				left = left + pointsWidth + spacingWidth
 				currencyFrameCharacterInfo.BagSpaceText:Show()
-			else	
+			else
 				currencyFrameCharacterInfo.BagSpaceText:Hide()
 			end
 			if EMA.db.charDurr == true then
@@ -887,7 +887,7 @@ function EMA:CurrencyListSetColumnWidth()
 		end
 	end	
 	-- Parent frame width and title.
-	local finalParentWidth = frameHorizontalSpacing + nameWidth + spacingWidth + (haveGold * (goldWidth + (spacingWidth * 3))) + (numberOfPointsColumns * (pointsWidth + spacingWidth)) + frameHorizontalSpacing
+	local finalParentWidth = frameHorizontalSpacing + nameWidth + spacingWidth + (haveGold * (goldWidth + spacingWidth)) + (numberOfPointsColumns * (pointsWidth + spacingWidth)) + frameHorizontalSpacing
 	if finalParentWidth < 95 then
 		finalParentWidth = 95
 	end
@@ -918,8 +918,7 @@ function EMA:CurrencyListSetColumnWidth()
 	-- Total Gold.
 	local nameLeft = frameHorizontalSpacing
 	local goldLeft = frameHorizontalSpacing + nameWidth + spacingWidth
-	local guildTop = -35 - ((EMAApi.GetTeamListMaximumOrderOnline() + 1) * 15) - 5
-	local goldTop = -35 - ((EMAApi.GetTeamListMaximumOrderOnline() + 1) * 15) - 7	
+	local goldTop = -35 - ((EMAApi.GetTeamListMaximumOrderOnline() + 1) * 15) - 5	
 	if EMA.db.currGold == true then
 		parentFrame.TotalGoldTitleText:SetWidth( nameWidth )
 		parentFrame.TotalGoldTitleText:SetPoint( "TOPLEFT", parentFrame, "TOPLEFT", nameLeft, goldTop )
@@ -940,8 +939,8 @@ function EMA:CreateEMACurrencyFrameInfo( characterName, parentFrame )
 	--EMA.Print("makelist", characterName)
 	--if EMAPrivate.Team.GetCharacterOnlineStatus (characterName) == true then
 	local left = 10
-	local spacing = 50
-	local width = 50
+	local spacing = 70
+	local width = 70
 	local top = 0
 	--local top = -35 + (-15 * EMAApi.GetPositionForCharacterName( characterName ))
 	-- WHAT THE HELL IS GOING ON HERE! Ebony!
@@ -962,17 +961,17 @@ function EMA:CreateEMACurrencyFrameInfo( characterName, parentFrame )
 	local currencyFrameCharacterInfo = EMA.currencyFrameCharacterInfo[characterName]
 	currencyFrameCharacterInfo.characterRowTopPoint = top
 	-- Set the characters name font string.
-	local frameCharacterName = EMA.globalCurrencyFramePrefix.."CharacterName"
+	local frameCharacterName = EMA.globalCurrencyFramePrefix.."CharacterName"..characterName
 	local frameCharacterNameText = parentFrame:CreateFontString( frameCharacterName.."Text", "OVERLAY", "GameFontNormal" )
 	frameCharacterNameText:SetText( Ambiguate( characterName , "none" ) )
 	frameCharacterNameText:SetTextColor( 1.00, 1.00, 1.00, 1.00 )
 	frameCharacterNameText:SetPoint( "TOPLEFT", parentFrame, "TOPLEFT", left, top )
-	frameCharacterNameText:SetWidth( width * 2.5 )
+	frameCharacterNameText:SetWidth( width * 2.2 )
 	frameCharacterNameText:SetJustifyH( "LEFT" )
 	currencyFrameCharacterInfo.characterNameText = frameCharacterNameText
 	left = left + (spacing * 2)
 	-- Set the Gold font string.
-	local frameGold = EMA.globalCurrencyFramePrefix.."Gold"
+	local frameGold = EMA.globalCurrencyFramePrefix.."Gold"..characterName
 	local frameGoldText = parentFrame:CreateFontString( frameGold.."Text", "OVERLAY", "GameFontNormal" )
 	frameGoldText:SetText( "0" )
 	frameGoldText:SetTextColor( 1.00, 1.00, 1.00, 1.00 )
@@ -982,7 +981,7 @@ function EMA:CreateEMACurrencyFrameInfo( characterName, parentFrame )
 	currencyFrameCharacterInfo.GoldText = frameGoldText
 	left = left + spacing
 	-- Set the BagSpace font string.
-	local frameBagSpace = EMA.globalCurrencyFramePrefix.."BagSpace"
+	local frameBagSpace = EMA.globalCurrencyFramePrefix.."BagSpace"..characterName
 	local frameBagSpaceText = parentFrame:CreateFontString( frameBagSpace.."Text", "OVERLAY", "GameFontNormal" )
 	frameBagSpaceText:SetText( "0/0" )
 	frameBagSpaceText:SetTextColor( 1.00, 1.00, 1.00, 1.00 )
@@ -992,7 +991,7 @@ function EMA:CreateEMACurrencyFrameInfo( characterName, parentFrame )
 	currencyFrameCharacterInfo.BagSpaceText = frameBagSpaceText
 	left = left + spacing
 	-- Set the Durability font string.
-	local frameCharDurr = EMA.globalCurrencyFramePrefix.."CharDurr"
+	local frameCharDurr = EMA.globalCurrencyFramePrefix.."CharDurr"..characterName
 	local frameCharDurrText = parentFrame:CreateFontString( frameCharDurr.."Text", "OVERLAY", "GameFontNormal" )
 	frameCharDurrText:SetText( "0"..L["%"] )
 	frameCharDurrText:SetTextColor( 1.00, 1.00, 1.00, 1.00 )
@@ -1048,13 +1047,31 @@ end
 
 function EMA:DoSendCurrency( characterName, dummyValue )
 	--EMA:Print("Test2")
-	if EMAApi.GetCharacterOnlineStatus ( characterName ) == true then
-	table.wipe( EMA.currentCurrencyValues )
-	EMA.currentCurrencyValues.currGold = GetMoney()
-	-- BagSpace Maths
-	local numFreeSlots, numTotalSlots = LibBagUtils:CountSlots("BAGS", 0)
-	EMA.currentCurrencyValues.bagSpace = numFreeSlots
-	EMA.currentCurrencyValues.bagSpaceMax = numTotalSlots
+	-- If the requester is online or it is the local character, send the currency info.
+	if characterName == EMA.characterName or EMAApi.GetCharacterOnlineStatus( characterName ) == true then
+		table.wipe( EMA.currentCurrencyValues )
+		EMA.currentCurrencyValues.currGold = GetMoney()
+		-- BagSpace Maths
+		local numFreeSlots = 0
+		local numTotalSlots = 0
+		for bagID = 0, 4 do
+			local free, total
+			if C_Container and C_Container.GetContainerNumFreeSlots then
+				free = C_Container.GetContainerNumFreeSlots(bagID)
+				total = C_Container.GetContainerNumSlots(bagID)
+			else
+				free = GetContainerNumFreeSlots(bagID)
+				total = GetContainerNumSlots(bagID)
+			end
+			if free then
+				numFreeSlots = numFreeSlots + free
+			end
+			if total then
+				numTotalSlots = numTotalSlots + total
+			end
+		end
+		EMA.currentCurrencyValues.bagSpace = numFreeSlots
+		EMA.currentCurrencyValues.bagSpaceMax = numTotalSlots
 	-- Durability Maths
 	local curTotal, maxTotal, broken = 0, 0, 0
 	for i = 1, 18 do
@@ -1096,7 +1113,10 @@ function EMA:DoShowToonsCurrency( characterName, currencyValues )
 	
 	currencyFrameCharacterInfo.GoldText:SetTextColor( r, g, b, a )
 	currencyFrameCharacterInfo.characterNameText:SetTextColor( r, g, b, a )
-	currencyFrameCharacterInfo.GoldText:SetTextColor( r, g, b, a )
+	-- Ensure alignment is correct
+	currencyFrameCharacterInfo.GoldText:SetJustifyH( "RIGHT" )
+	currencyFrameCharacterInfo.BagSpaceText:SetJustifyH( "RIGHT" )
+	currencyFrameCharacterInfo.CharDurrText:SetJustifyH( "RIGHT" )
 	
 	if currencyValues.bagSpace == 0 then 
 		--EMA:Print("SetRed")

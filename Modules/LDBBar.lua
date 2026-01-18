@@ -29,18 +29,16 @@ local LibSharedMedia = LibStub('LibSharedMedia-3.0')
 local L = LibStub( "AceLocale-3.0" ):GetLocale( "Core" )
 
 
-local baseFont = CreateFont("baseFont")
+local baseFont = CreateFont("EMALDBBaseFont")
 
 -- Check for ElvUI -- not working for 10.x
 if EMAPrivate.Core.isEmaClassicBccBuild() == true then	
 	if (ElvUI == nil) or (ElvUI == '') then 
-
-		baseFont:SetFont(GameTooltipText:GetFont(), 10)	
-
+		EMA_SafeSetFont(baseFont, GameTooltipText:GetFont() or [[Fonts\FRIZQT__.TTF]], 10)	
 	elseif LibSharedMedia:IsValid('font', ElvUI[1].db.general.font) then
-		baseFont:SetFont(LibSharedMedia:Fetch('font', ElvUI[1].db.general.font), 10)
+		EMA_SafeSetFont(baseFont, LibSharedMedia:Fetch('font', ElvUI[1].db.general.font) or [[Fonts\FRIZQT__.TTF]], 10)
 	else
-		baseFont:SetFont(GameTooltipText:GetFont(), 10)
+		EMA_SafeSetFont(baseFont, GameTooltipText:GetFont() or [[Fonts\FRIZQT__.TTF]], 10)
 	end
 
 	local function OnEnter(self)

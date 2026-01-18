@@ -137,7 +137,7 @@ EMA.COMMAND_SELL_ITEM = "SellItem"
 
 EMA.BAG_PLAYER_BACKPACK = 0
 -- NUM_BAG_SLOTS is defined as 4 in Blizzard's FrameXML\BankFrame.lua.
-EMA.BAG_PLAYER_MAXIMUM = NUM_BAG_SLOTS
+EMA.BAG_PLAYER_MAXIMUM = _G.EMA_NUM_BAG_SLOTS
 -- Store ItemQuality https://wow.gamepedia.com/API_TYPE_Quality
 EMA.ITEM_QUALITY_POOR = 0
 EMA.ITEM_QUALITY_COMMON = 1
@@ -978,7 +978,7 @@ function EMA:DoMerchantSellItems()
 	if EMAPrivate.Core.isEmaClassicBccBuild() == false then
 		bagContainerName = C_Container.GetContainerNumSlots
 	end
-	for bagID = 0, NUM_BAG_SLOTS do
+	for bagID = 0, _G.EMA_NUM_BAG_SLOTS do
 		for slotID = 1, bagContainerName( bagID ) do 
 			--EMA:Print( "Bags OK. checking", itemLink )
 			local item = Item:CreateFromBagAndSlot(bagID, slotID)
