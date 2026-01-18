@@ -436,6 +436,7 @@ function EMA:GetItemFromItemDatabase( itemNumber )
 end
 
 function EMA:OnButtonContentsChanged( event, button, state, type, value, ... )
+    --print("EMA Callback OnButtonContentsChanged", button.itemNumber, type, value)
     if type == "mount" or type == "battlepet" then
 		return
     end

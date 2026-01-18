@@ -232,6 +232,13 @@ function lib:CreateButton(id, name, header, config)
 	-- somewhat of a hack for the Flyout buttons to not error.
 	button.action = 0
 
+	-- Bridge for modern template case changes
+	button.icon = button.icon or button.Icon or _G[name.."Icon"]
+	button.Count = button.Count or button.count or _G[name.."Count"]
+	button.HotKey = button.HotKey or button.hotKey or _G[name.."HotKey"]
+	button.cooldown = button.cooldown or button.Cooldown or _G[name.."Cooldown"]
+	button.Name = button.Name or button.name or _G[name.."Name"]
+
 	lib.callbacks:Fire("OnButtonCreated", button)
 
 	return button
@@ -309,6 +316,9 @@ function SetupSecureSnippets(button)
 	button:SetAttribute("OnReceiveDrag", [[
 		if self:GetAttribute("LABdisableDragNDrop") then return false end
 		local kind, value, subtype, extra = ...
+		if not (kind and value) then
+			kind, value, subtype, extra = GetCursorInfo()
+		end
 		if not kind or not value then return false end
 		local state = self:GetAttribute("state")
 		local buttonType, buttonAction = self:GetAttribute("type"), nil
@@ -324,7 +334,9 @@ function SetupSecureSnippets(button)
 					print("no spell id?", ...)
 				end
 			elseif kind == "item" and value then
-				value = format("item:%d", value)
+				if not tostring(value):match("^item:") then
+					value = format("item:%s", value)
+				end
 			end
 
 			-- Get the action that was on the button before
@@ -346,6 +358,7 @@ function SetupSecureSnippets(button)
 			-- get the action for (pet-)action buttons
 			buttonAction = self:GetAttribute("action")
 		end
+		-- print("Secure OnReceiveDrag Pickup", buttonType, buttonAction)
 		return self:RunAttribute("PickupButton", buttonType, buttonAction)
 	]])
 
@@ -353,14 +366,9 @@ function SetupSecureSnippets(button)
 	-- Wrapped OnDragStart(self, button, kind, value, ...)
 	if button.header and button.header.WrapScript then
 		button.header:WrapScript(button, "OnDragStart", [[
-			return self:RunAttribute("OnDragStart")
-		]])
-		-- Wrap twice, because the post-script is not run when the pre-script causes a pickup (doh)
-		-- we also need some phony message, or it won't work =/
-		button.header:WrapScript(button, "OnDragStart", [[
-			return "message", "update"
+			return button:RunAttribute("OnDragStart")
 		]], [[
-			self:RunAttribute("UpdateState", self:GetAttribute("state"))
+			button:RunAttribute("UpdateState", button:GetAttribute("state"))
 		]])
 	end
 
@@ -368,14 +376,13 @@ function SetupSecureSnippets(button)
 	-- Wrapped OnReceiveDrag(self, button, kind, value, ...)
 	if button.header and button.header.WrapScript then
 		button.header:WrapScript(button, "OnReceiveDrag", [[
-			return self:RunAttribute("OnReceiveDrag", kind, value, ...)
-		]])
-		-- Wrap twice, because the post-script is not run when the pre-script causes a pickup (doh)
-		-- we also need some phony message, or it won't work =/
-		button.header:WrapScript(button, "OnReceiveDrag", [[
-			return "message", "update"
+			local kind, value, subtype, extra = select(3, ...)
+			if not (kind and value) then
+				kind, value, subtype, extra = GetCursorInfo()
+			end
+			return button:RunAttribute("OnReceiveDrag", kind, value, subtype, extra)
 		]], [[
-			self:RunAttribute("UpdateState", self:GetAttribute("state"))
+			button:RunAttribute("UpdateState", button:GetAttribute("state"))
 		]])
 	end
 
@@ -385,14 +392,14 @@ function WrapOnClick(button)
 	-- Wrap OnClick, to catch changes to actions that are applied with a click on the button.
 	if button.header and button.header.WrapScript then
 		button.header:WrapScript(button, "OnClick", [[
-			if self:GetAttribute("type") == "action" then
-				local type, action = GetActionInfo(self:GetAttribute("action"))
+			if button:GetAttribute("type") == "action" then
+				local type, action = GetActionInfo(button:GetAttribute("action"))
 				return nil, format("%s|%s", tostring(type), tostring(action))
 			end
 		]], [[
-			local type, action = GetActionInfo(self:GetAttribute("action"))
+			local type, action = GetActionInfo(button:GetAttribute("action"))
 			if message ~= format("%s|%s", tostring(type), tostring(action)) then
-				self:RunAttribute("UpdateState", self:GetAttribute("state"))
+				button:RunAttribute("UpdateState", button:GetAttribute("state"))
 			end
 		]])
 	end
@@ -480,7 +487,7 @@ function Generic:UpdateState(state)
 	else
 	-- TODO
 	end
-	self:UpdateAction()
+	self:UpdateAction(true)
 end
 
 function Generic:GetAction(state)
@@ -496,11 +503,12 @@ function Generic:UpdateAllStates()
 end
 
 function Generic:ButtonContentsChanged(state, kind, value)
+	-- EMA:Print("Insecure ButtonContentsChanged", state, kind, value)
 	state = tostring(state)
 	self.state_types[state] = kind or "empty"
 	self.state_actions[state] = value
 	lib.callbacks:Fire("OnButtonContentsChanged", self, state, self.state_types[state], self.state_actions[state])
-	self:UpdateAction(self)
+	self:UpdateAction(true)
 end
 
 function Generic:DisableDragNDrop(flag)
@@ -646,13 +654,17 @@ function Generic:PostClick()
 		end
 		local oldType, oldAction = self._state_type, self._state_action
 		local kind, data, subtype, extra = GetCursorInfo()
-		self.header:SetFrameRef("updateButton", self)
-		self.header:Execute(format([[
-			local frame = self:GetFrameRef("updateButton")
-			control:RunFor(frame, frame:GetAttribute("OnReceiveDrag"), %s, %s, %s, %s)
-			control:RunFor(frame, frame:GetAttribute("UpdateState"), %s)
-		]], formatHelper(kind), formatHelper(data), formatHelper(subtype), formatHelper(extra), formatHelper(self:GetAttribute("state"))))
-		PickupAny("clear", oldType, oldAction)
+		if kind and data then
+			if self.header and self.header.SetFrameRef then
+				self.header:SetFrameRef("updateButton", self)
+				self.header:Execute(format([[
+					local frame = self:GetFrameRef("updateButton")
+					control:RunFor(frame, frame:GetAttribute("OnReceiveDrag"), %s, %s, %s, %s)
+					control:RunFor(frame, frame:GetAttribute("UpdateState"), %s)
+				]], formatHelper(kind), formatHelper(data), formatHelper(subtype), formatHelper(extra), formatHelper(self:GetAttribute("state"))))
+			end
+			PickupAny("clear", oldType, oldAction)
+		end
 	end
 	self._receiving_drag = nil
 
@@ -1158,19 +1170,6 @@ function lib:UpdateAllButtons()
 	end
 end	
 
-function Generic:UpdateAction(force)
-	local type, action = self:GetAction()
-	if force or (type ~= self._state_type) or (action ~= self._state_action) then
-		-- type changed, update the metatable
-		if force or (self._state_type ~= type) then
-			local meta = type_meta_map[type] or type_meta_map.empty
-			setmetatable(self, meta)
-			self._state_type = type
-		end
-		self._state_action = action
-		Update(self)
-	end
-end
 
 function Update(self, fromUpdateConfig)
 	if self:HasAction() then
@@ -1240,8 +1239,11 @@ function Update(self, fromUpdateConfig)
 	end
 
 	if texture then
-		self.icon:SetTexture(texture)
-		self.icon:Show()
+		local icon = self.icon or self.Icon
+		if icon then
+			icon:SetTexture(texture)
+			icon:Show()
+		end
 		self.rangeTimer = - 1
 		if not WoW10 then
 			self:SetNormalTexture("Interface\\Buttons\\UI-Quickslot2")
@@ -1250,8 +1252,10 @@ function Update(self, fromUpdateConfig)
 			end
 		end
 	else
-		self.icon:Hide()
-		self.cooldown:Hide()
+		local icon = self.icon or self.Icon
+		if icon then icon:Hide() end
+		local cooldown = self.cooldown or self.Cooldown
+		if cooldown then cooldown:Hide() end
 		self.rangeTimer = nil
 		if self.HotKey:GetText() == RANGE_INDICATOR then
 			self.HotKey:Hide()
@@ -1720,13 +1724,22 @@ Spell.GetSpellId              = function(self) return self._state_action end
 -----------------------------------------------------------
 --- Item Button
 local function getItemId(input)
-	return input:match("^item:(%d+)")
+	if not input then return nil end
+	local id = input:match("^item:(%d+)")
+	if id then return tonumber(id) end
+	return tonumber(input)
 end
 
 Item.HasAction               = function(self) return true end
 --Item.HasAction               = function(self) return false end
 Item.GetActionText           = function(self) return "" end
-Item.GetTexture              = function(self) return GetItemIcon(self._state_action) end
+Item.GetTexture              = function(self) 
+	local id = getItemId(self._state_action)
+	if id then
+		return GetItemIcon(id)
+	end
+	return GetItemIcon(self._state_action) 
+end
 Item.GetCharges              = function(self) return nil end
 --Item.GetCount                = function(self) return GetItemCount(self._state_action, nil, true) end
 -- Ebony changes for Ema to count the stacks all chars and display in the bar!
