@@ -1497,13 +1497,15 @@ StaticPopupDialogs["TEAMDEATH"] = {
 			local text = HasSoulstone()
 		end
 		if ( text ) then
-			self.button2:SetText(text)
+			self.Buttons[2]:SetText(text)
 		end
 		if ( self.timeleft == -1 ) then
 			self.text:SetText(DEATH_RELEASE_NOTIMER)
 		end
 		--]]
-		self.button1:SetText(L["RELEASE_TEAM"])
+		if self.Buttons and self.Buttons[1] then
+			self.Buttons[1]:SetText(L["RELEASE_TEAM"])
+		end
 	end,
 	OnAccept = function(self)
 		--EMA:Print("testRes")
@@ -1535,30 +1537,37 @@ StaticPopupDialogs["TEAMDEATH"] = {
 		]]
 	end,
 	OnUpdate = function(self, elapsed)
+		-- Check if buttons exist (API compatibility)
+		if not self.Buttons or not self.Buttons[1] then
+			return
+		end
+		
 		if ( IsFalling() and not IsOutOfBounds()) then
-			self.button1:Disable()
-			self.button2:Disable()
-			--self.button3:Disable()
+			self.Buttons[1]:Disable()
+			if self.Buttons[2] then
+				self.Buttons[2]:Disable()
+			end
+			--self.Buttons[3]:Disable()
 			return;
 		end
 		
-		local b1_enabled = self.button1:IsEnabled()
-		self.button1:SetEnabled(not IsEncounterInProgress())
+		local b1_enabled = self.Buttons[1]:IsEnabled()
+		self.Buttons[1]:SetEnabled(not IsEncounterInProgress())
 		
-		if ( b1_enabled ~= self.button1:IsEnabled() ) then
+		if ( b1_enabled ~= self.Buttons[1]:IsEnabled() ) then
 			if ( b1_enabled ) then
 				self.text:SetText(CAN_NOT_RELEASE_IN_COMBAT)
 			else
 				self.text:SetText("");
 				StaticPopupDialogs[self.which].OnShow(self)
 			end
-			StaticPopup_Resize(dialog, which)
+			StaticPopup_Resize(self, self.which)
 		end
 		--[[
 		if( HasSoulstone() and CanUseSoulstone() ) then
-			self.button2:Enable()
+			self.Buttons[2]:Enable()
 		else
-			self.button2:Disable()
+			self.Buttons[2]:Disable()
 		end
 		--]]
 	end,
