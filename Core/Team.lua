@@ -1398,7 +1398,8 @@ function EMA:PARTY_INVITE_REQUEST( event, inviter, ... )
 	-- Hide the popup group invitation request if accepted or declined the invite.
 	if hidePopup == true then
 		-- Make sure the invite dialog does not decline the invitation when hidden.
-		for iteratePopups = 1, STATICPOPUP_NUMDIALOGS do
+		local numDialogs = tonumber(STATICPOPUP_NUMDIALOGS) or 4
+		for iteratePopups = 1, numDialogs do
 			local dialog = _G["StaticPopup"..iteratePopups]
 			if dialog.which == "PARTY_INVITE" then
 				-- Set the inviteAccepted flag to true (even if the invite was declined, as the
