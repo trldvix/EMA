@@ -942,7 +942,7 @@ function EMA:MAIL_SHOW(event, ...)
 	--EMA:Print("test")
 	if EMA.db.showEMAMailWindow == true then
 		if not IsShiftKeyDown() then
-			EMA:AddAllToMailBox()
+			EMA:ScheduleTimer( "AddAllToMailBox", 0.2 )
 		else 
 			EMA.ShiftkeyDown = true
 		end	
@@ -958,7 +958,7 @@ end
 
 function EMA:AddAllToMailBox()
 	--EMA:Print("run")
-	MailFrameTab_OnClick(nil, "2")
+	MailFrameTab2:Click()
 	--EMA.OldMailName = SendMailNameEditBox:GetText()
 	SendMailNameEditBox:SetText( "" )	
 	SendMailMoneyGold:SetText( "" )
@@ -1047,10 +1047,8 @@ function EMA:AddAllToMailBox()
 								SendMailNameEditBox:SetText( toonName )
 								SendMailSubjectEditBox:SetText( L["SENT_AUTO_MAILER"] )
 								if C_Container and C_Container.PickupContainerItem then
-									C_Container.PickupContainerItem( bagID, slotID )
 									C_Container.UseContainerItem( bagID , slotID  )
 								else
-									PickupContainerItem( bagID, slotID )
 									UseContainerItem( bagID , slotID  )
 								end	
 							end	
@@ -1088,7 +1086,7 @@ function EMA:DoSendMail( gold )
 	local gold =  SendMailMoneyCopper:GetText()
 	--EMA:Print("test", gold)
 	if HasSendMailItem( "1" ) == false and gold == "" then
-		MailFrameTab_OnClick(nil, 1)
+		MailFrameTab1:Click()
 	end	
 end	
 
@@ -1115,7 +1113,7 @@ function EMA:AddGoldToMailBox()
 					local gold, silver, copper = EMAUtilities:MoneyString( moneyToDepositOrWithdraw )
 					local coinText = GetCoinText( moneyToDepositOrWithdraw )
 					--EMA:Print("Send", "gold", gold, "silver", silver, "copper", copper )
-					MailFrameTab_OnClick(nil, "2")
+					MailFrameTab2:Click()
 					SendMailSubjectEditBox:SetText( (L["SENT_AUTO_MAILER_GOLD"](coinText) ) )
 					SendMailNameEditBox:SetText( toonName )
 					SendMailMoneyGold:SetText(gold)
