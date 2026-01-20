@@ -958,13 +958,8 @@ end
 
 function EMA:AddAllToMailBox()
 	--EMA:Print("run")
-	MailFrameTab2:Click()
-	--EMA.OldMailName = SendMailNameEditBox:GetText()
-	SendMailNameEditBox:SetText( "" )	
-	SendMailMoneyGold:SetText( "" )
-	SendMailMoneySilver:SetText( "" )
-	SendMailMoneyCopper:SetText( "" )
-	SendMailNameEditBox:ClearFocus()
+	local hasSwitchedToMailTab = false
+	
 	local EMA_NUMBER_BAG_SLOTS = _G.EMA_NUM_BAG_SLOTS
 	if EMAPrivate.Core.isEmaClassicBccBuild() == false then
 		EMA_NUMBER_BAG_SLOTS = 5
@@ -1037,7 +1032,16 @@ function EMA:AddAllToMailBox()
 							end
 						end
 					end
-					if canSend == true and toonName ~= "" and toonName ~= nil then	
+					if canSend == true and toonName ~= "" and toonName ~= nil then
+						if hasSwitchedToMailTab == false then
+							MailFrameTab2:Click()
+							SendMailNameEditBox:SetText( "" )	
+							SendMailMoneyGold:SetText( "" )
+							SendMailMoneySilver:SetText( "" )
+							SendMailMoneyCopper:SetText( "" )
+							SendMailNameEditBox:ClearFocus()
+							hasSwitchedToMailTab = true
+						end	
 						local currentMailToon = SendMailNameEditBox:GetText()
 						local characterName = EMAUtilities:AddRealmToNameIfMissing( toonName )
 						if toonName == currentMailToon or currentMailToon == "" and characterName ~= EMA.characterName then
